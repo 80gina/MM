@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f5ef">
+  <meta name="description" content="감정을 기록하고, 이해하고, 돌보는 AI 감정 일기 데모">
+  <title>Mindily — 오늘의 마음</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23e9f3e8'/%3E%3Cpath d='M31 48V26M31 34c-8 0-13-5-13-13 8 0 13 5 13 13Zm1-6c0-8 5-13 13-13 0 8-5 13-13 13Z' fill='none' stroke='%233d745e' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#app-main">본문으로 바로가기</a>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <aside class="desktop-rail" aria-label="Mindily 안내">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">♧</span>
+        <div><strong>Mindily</strong><small>오늘도, 괜찮아요.</small></div>
+      </div>
+      <blockquote>“조금 느려도 괜찮아요.<br>당신은 지금도 충분히 잘하고 있어요.”</blockquote>
+      <div class="rail-art" aria-hidden="true">
+        <span>☁</span><span>❋</span><span>⌁</span>
+      </div>
+      <p class="privacy-note">기록은 이 기기에만 저장돼요.</p>
+    </aside>
+
+    <main id="app-main" class="phone" aria-live="polite">
+      <header class="topbar">
+        <button class="icon-button back-button" type="button" aria-label="이전 화면" hidden>‹</button>
+        <div class="mini-brand">
+          <span class="brand-mark" aria-hidden="true">♧</span>
+          <div><strong>Mindily</strong><small>오늘도, 괜찮아요.</small></div>
+        </div>
+        <h1 class="screen-title" hidden></h1>
+        <button class="icon-button" type="button" aria-label="도움말" data-open-dialog="safety-dialog">ⓘ</button>
+      </header>
+
+      <section class="screen active" data-screen="home" aria-labelledby="home-heading">
+        <div class="home-sky card hero-card">
+          <p class="eyebrow" id="today-date">9월 16일 수요일</p>
+          <h2 id="home-heading">안녕하세요,<br>오늘 마음은 어떤가요?</h2>
+          <p>크게 설명하지 않아도 괜찮아요. 지금의 마음부터 천천히 살펴봐요.</p>
+          <div class="quiet-window" aria-hidden="true"><span>☀</span><i></i><i></i><i></i></div>
+          <button class="primary-button" type="button" data-go="diary"><span aria-hidden="true">＋</span> 오늘의 일기 쓰기</button>
+        </div>
+
+        <div class="section-heading"><h3>오늘의 상태</h3><button type="button" class="text-button" data-go="records">기록 보기</button></div>
+        <div class="card status-card">
+          <div class="mood-face" aria-hidden="true">😮‍💨</div>
+          <div class="status-copy"><strong id="latest-mood">조금 지쳐있어요</strong><small>AI의 제안이며, 언제든 수정할 수 있어요.</small></div>
+          <div class="stress-dots" aria-label="스트레스 5점 중 3점"><i></i><i></i><i></i><i class="off"></i><i class="off"></i></div>
+        </div>
+
+        <div class="companion-card card">
+          <div class="coach-avatar" aria-hidden="true">☁</div>
+          <div><span class="eyebrow">AI의 한마디</span><p id="home-coach-message">최근 며칠 동안 조금 피곤한 날이 많았어요. 오늘은 잠시 쉬어갈 자리를 만들어볼까요?</p></div>
+        </div>
+
+        <div class="section-heading"><h3>오늘의 작은 미션</h3><span class="soft-chip">약 5분</span></div>
+        <div class="card mission-card">
+          <div class="mission-icon" aria-hidden="true">🌿</div>
+          <div><strong>휴대폰을 내려놓고<br>창밖을 바라보기</strong><p>당장 해결하지 않아도 되는 생각은 잠시 내려두어요.</p></div>
+          <div class="progress-track" aria-label="미션 진행률"><span id="mission-progress"></span></div>
+          <button class="secondary-button" type="button" id="mission-button">미션 시작하기</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="diary" aria-labelledby="diary-heading">
+        <div class="screen-intro">
+          <span class="eyebrow">오늘의 감정 일기</span>
+          <h2 id="diary-heading">오늘 하루는 어땠나요?</h2>
+          <p>편하게 이야기해주세요. 판단하지 않을게요.</p>
+        </div>
+        <form id="diary-form">
+          <label class="journal-field">
+            <span class="sr-only">오늘의 일기</span>
+            <textarea id="diary-text" maxlength="1000" placeholder="오늘 있었던 일이나 지금 느끼는 감정을 자유롭게 적어보세요…" required></textarea>
+            <small><span id="char-count">0</span>/1,000</small>
+          </label>
+
+          <fieldset class="form-block">
+            <legend>지금 느끼는 감정 <small>복수 선택 가능</small></legend>
+            <div class="tag-list" id="emotion-tags">
+              <button type="button" data-tag="기쁨">기쁨</button><button type="button" data-tag="피곤함">피곤함</button><button type="button" data-tag="불안">불안</button><button type="button" data-tag="스트레스">스트레스</button><button type="button" data-tag="외로움">외로움</button><button type="button" data-tag="답답함">답답함</button><button type="button" data-tag="설렘">설렘</button><button type="button" data-tag="슬픔">슬픔</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-block">
+            <legend>스트레스는 어느 정도인가요?</legend>
+            <div class="stress-scale" role="radiogroup" aria-label="스트레스 정도">
+              <label><input type="radio" name="stress" value="1"><span>1</span></label>
+              <label><input type="radio" name="stress" value="2"><span>2</span></label>
+              <label><input type="radio" name="stress" value="3" checked><span>3</span></label>
+              <label><input type="radio" name="stress" value="4"><span>4</span></label>
+              <label><input type="radio" name="stress" value="5"><span>5</span></label>
+            </div>
+            <div class="scale-labels"><span>낮음</span><span>매우 높음</span></div>
+          </fieldset>
+
+          <p class="privacy-inline"><span aria-hidden="true">♡</span> 이 데모의 일기는 브라우저 안에만 저장돼요.</p>
+          <button class="primary-button submit-button" type="submit">AI에게 마음 맡기기 <span aria-hidden="true">✨</span></button>
+        </form>
+      </section>
+
+      <section class="screen" data-screen="analysis" aria-labelledby="analysis-heading">
+        <div class="screen-intro centered">
+          <span class="sprout-icon" aria-hidden="true">🌱</span>
+          <h2 id="analysis-heading">당신의 오늘을<br>조금 들여다봤어요.</h2>
+          <p>감정을 확정하지 않고, 글 속 단서를 정리했어요.</p>
+        </div>
+
+        <div class="card analysis-card">
+          <div class="card-label">오늘의 주요 감정</div>
+          <div class="emotion-result" id="emotion-result"></div>
+          <div class="divider"></div>
+          <div class="card-label">감정 신호</div>
+          <p class="analysis-summary" id="analysis-summary">스트레스가 조금 높은 상태로 보여요.</p>
+          <div class="meter"><span id="analysis-meter"></span></div>
+          <small class="model-note">KcELECTRA 감정 대분류를 바탕으로 한 데모 결과예요.</small>
+        </div>
+
+        <div class="card coach-note">
+          <div class="coach-avatar" aria-hidden="true">☁</div>
+          <div><span class="eyebrow">AI의 한마디</span><p id="analysis-message"></p></div>
+        </div>
+
+        <div class="section-heading"><h3>내 마음과 맞나요?</h3><button type="button" class="text-button" data-open-dialog="mood-dialog">무드 미터에서 수정</button></div>
+        <button class="mood-confirm card" type="button" data-open-dialog="mood-dialog">
+          <span class="mood-dot" id="mood-dot"></span><span><strong id="selected-detailed-mood">걱정되는</strong><small>AI가 제안한 세부 감정</small></span><span aria-hidden="true">›</span>
+        </button>
+        <button class="primary-button" type="button" data-go="coach">이 마음에 맞는 휴식 보기</button>
+      </section>
+
+      <section class="screen" data-screen="coach" aria-labelledby="coach-heading">
+        <div class="screen-intro">
+          <span class="eyebrow">맞춤형 힐링 코치</span>
+          <h2 id="coach-heading">오늘은 이런 휴식이<br>어울릴 것 같아요 🌿</h2>
+          <p>지금 바로 할 수 있는 작은 활동부터 골랐어요.</p>
+        </div>
+        <div class="recommend-list">
+          <article class="card recommendation featured">
+            <div class="rec-icon mint" aria-hidden="true">🌱</div><div><span class="soft-chip">1순위 추천</span><h3>1분 호흡하기</h3><p>복잡한 생각을 잠시 내려놓고 호흡의 감각에 집중해보세요.</p></div><button class="secondary-button" type="button" data-start-breath>시작하기</button>
+          </article>
+          <article class="card recommendation">
+            <div class="rec-icon blue" aria-hidden="true">♫</div><div><h3>소리로 쉬어가기</h3><p>차분한 자연의 소리를 들으며 머릿속의 속도를 낮춰봐요.</p></div><button class="secondary-button pale-blue" type="button" data-toast="지금은 데모 음원 대신 1분 호흡을 이용해보세요.">들어보기</button>
+          </article>
+          <article class="card recommendation">
+            <div class="rec-icon lilac" aria-hidden="true">☁</div><div><h3>마음 털어놓기</h3><p>조금 더 이야기하고 싶다면, 서두르지 않고 들어드릴게요.</p></div><button class="secondary-button pale-lilac" type="button" data-go="chat">이야기하기</button>
+          </article>
+        </div>
+        <p class="gentle-note">지금은 충분히 쉬어도 괜찮아요.<br>작은 휴식이 내일의 여유가 되어줄 거예요. ♡</p>
+      </section>
+
+      <section class="screen" data-screen="chat" aria-labelledby="chat-heading">
+        <div class="chat-heading"><div class="coach-avatar" aria-hidden="true">☁</div><div><h2 id="chat-heading">마음 친구</h2><span><i></i> 천천히 듣고 있어요</span></div></div>
+        <div class="chat-thread" id="chat-thread">
+          <div class="message ai"><small>Mindily</small><p>오늘 여러 가지 일이 겹쳐 마음의 여유가 줄어든 것 같아요. 가장 마음에 걸리는 일이 있었나요?</p></div>
+          <div class="message user"><p>오늘 발표를 망친 것 같아서 계속 생각나.</p></div>
+          <div class="message ai"><small>Mindily</small><p>그 장면이 계속 떠오르면 마음이 무거울 수 있겠어요. 지금은 그때 가장 아쉬웠던 한 가지만 이야기해도 괜찮아요.</p></div>
+        </div>
+        <form class="chat-composer" id="chat-form"><label><span class="sr-only">마음 친구에게 보내기</span><input id="chat-input" placeholder="지금 마음을 이야기해보세요…" autocomplete="off"></label><button type="submit" aria-label="보내기">↑</button></form>
+        <p class="chat-disclaimer">위기 상황에는 지역 응급기관이나 전문 상담기관에 연락해주세요.</p>
+      </section>
+
+      <section class="screen" data-screen="records" aria-labelledby="records-heading">
+        <div class="screen-intro"><span class="eyebrow">나의 마음 기록</span><h2 id="records-heading">감정은 매일 달라도 괜찮아요.</h2><p>평가보다 흐름을 발견하는 데 집중해요.</p></div>
+        <div class="segmented" role="tablist" aria-label="기록 기간"><button role="tab" aria-selected="true">주간</button><button role="tab" aria-selected="false">월간</button></div>
+        <div class="card chart-card">
+          <div class="section-heading"><h3>이번 주 감정 흐름</h3><span class="soft-chip">9월 10–16일</span></div>
+          <div class="emotion-chart" id="emotion-chart" aria-label="이번 주 감정 흐름 그래프"></div>
+          <div class="chart-axis"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
+        </div>
+        <div class="card pattern-card"><div class="pattern-icon" aria-hidden="true">◷</div><div><span class="eyebrow">AI가 발견한 패턴</span><p>평일 저녁에 스트레스가 높아지는 경향이 있어요. 충분히 쉰 다음 날에는 편안한 감정이 조금 늘었어요.</p></div></div>
+        <div class="card recent-entry"><div class="section-heading"><h3>최근 기록</h3><span id="record-date">오늘</span></div><div class="entry-title"><span id="record-emoji">😮‍💨</span><strong id="record-mood">걱정되는</strong><span class="soft-chip" id="record-stress">스트레스 3/5</span></div><p id="record-copy">오늘의 마음을 기록하면 여기에 일기와 AI가 정리한 감정이 남아요.</p></div>
+      </section>
+
+      <nav class="bottom-nav" aria-label="주요 메뉴">
+        <button type="button" class="active" data-go="home"><span aria-hidden="true">⌂</span><small>홈</small></button>
+        <button type="button" data-go="diary"><span aria-hidden="true">▣</span><small>감정 일기</small></button>
+        <button type="button" data-go="coach"><span aria-hidden="true">♧</span><small>AI 코치</small></button>
+        <button type="button" data-go="records"><span aria-hidden="true">⌁</span><small>마음 기록</small></button>
+      </nav>
+    </main>
+  </div>
+
+  <dialog id="mood-dialog" class="sheet-dialog">
+    <form method="dialog" class="sheet-content">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="section-heading"><div><span class="eyebrow">무드 미터</span><h2>지금 마음과 가까운 단어는?</h2></div><button class="icon-button" value="cancel" aria-label="닫기">×</button></div>
+      <p>에너지와 편안함의 위치를 참고하되, 가장 맞는 감정은 직접 고르세요.</p>
+      <div class="mood-meter" id="mood-meter">
+        <button type="button" data-mood="초조한" data-color="#f47d61">초조한</button><button type="button" data-mood="답답한" data-color="#f6a06f">답답한</button><button type="button" data-mood="설레는" data-color="#f5c84d">설레는</button><button type="button" data-mood="활기찬" data-color="#e8b643">활기찬</button>
+        <button type="button" data-mood="불안한" data-color="#d65e58">불안한</button><button type="button" data-mood="걱정되는" data-color="#ec846f" class="selected">걱정되는</button><button type="button" data-mood="기분 좋은" data-color="#f0d25d">기분 좋은</button><button type="button" data-mood="집중되는" data-color="#d8c44c">집중되는</button>
+        <button type="button" data-mood="지친" data-color="#739bdc">지친</button><button type="button" data-mood="외로운" data-color="#536dc5">외로운</button><button type="button" data-mood="편안한" data-color="#78b975">편안한</button><button type="button" data-mood="안정된" data-color="#58a967">안정된</button>
+        <button type="button" data-mood="우울한" data-color="#5251a5">우울한</button><button type="button" data-mood="무기력한" data-color="#4e77c6">무기력한</button><button type="button" data-mood="고요한" data-color="#4f9c63">고요한</button><button type="button" data-mood="포근한" data-color="#32854c">포근한</button>
+      </div>
+      <div class="meter-label energy">에너지 높음 ↑</div><div class="meter-label pleasant">편안함 높음 →</div>
+      <button class="primary-button" value="confirm" id="confirm-mood">이 감정으로 기록하기</button>
+    </form>
+  </dialog>
+
+  <dialog id="breath-dialog" class="breath-dialog">
+    <div class="breath-content"><button class="icon-button close-breath" type="button" aria-label="호흡 닫기">×</button><span class="eyebrow">1분 호흡</span><div class="breath-orb"><span id="breath-label">들이쉬어요</span></div><p>어깨의 힘을 풀고, 천천히 숨의 움직임을 느껴보세요.</p><strong id="breath-time">01:00</strong></div>
+  </dialog>
+
+  <dialog id="safety-dialog" class="info-dialog">
+    <form method="dialog"><button class="icon-button" value="cancel" aria-label="닫기">×</button><span class="eyebrow">안전한 사용 안내</span><h2>Mindily는 마음을 정리하는 도구예요.</h2><p>감정 분석은 의료적 진단이 아니며, 중요한 판단을 대신하지 않아요. 스스로 또는 타인을 해칠 위험이 있거나 즉각적인 도움이 필요하면 지역 응급기관과 전문 상담기관에 연락해주세요.</p><button class="secondary-button" value="ok">확인했어요</button></form>
+  </dialog>
+
+  <div class="toast" role="status" aria-live="polite" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
+

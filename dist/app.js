@@ -124,6 +124,27 @@ function renderAnalysis() {
   document.getElementById('analysis-message').textContent = messages[lead];
   updateMoodUI();
   updateRecordUI(lastAnalysis);
+  loadHealingRecommendations();
+}
+
+async function loadHealingRecommendations() {
+  if (!lastAnalysis) return;
+  try {
+    const response = await fetch('/api/healing/recommend', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({emotion: lastAnalysis.ranked[0].name, stress: lastAnalysis.stress, minutes: 20, allow_location: false})
+    });
+    if (!response.ok) throw new Error('recommendation');
+    const data = await response.json();
+    const list = document.querySelector('.recommend-list');
+    list.innerHTML = data.cards.slice(0, 4).map((card, index) => `<article class="card recommendation ${index === 0 ? 'featured' : ''}">
+      <div class="rec-icon ${index % 2 ? 'blue' : 'mint'}" aria-hidden="true">${card.kind === '음악' ? '♫' : card.kind === '감각활동' ? '◌' : '🌱'}</div>
+      <div><span class="soft-chip">${index === 0 ? '1순위 추천' : card.kind}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.description)}</p></div>
+      <button class="secondary-button" type="button" data-toast="${escapeHtml(card.title)} 활동을 준비했어요.">시작하기</button>
+    </article>`).join('');
+  } catch (_) {
+    // 기본 정적 추천 카드는 API 오류에도 그대로 사용할 수 있다.
+  }
 }
 
 function saveEntry(entry) {

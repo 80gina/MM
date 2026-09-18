@@ -37,6 +37,21 @@ document.addEventListener('click', (event) => {
   if (toastTarget) toast(toastTarget.dataset.toast);
 });
 
+document.getElementById('feedback-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const satisfaction = document.querySelector('input[name="satisfaction"]:checked')?.value;
+  const consent = document.getElementById('feedback-consent').checked;
+  if (!satisfaction || !consent) { showToast('만족도와 익명 제출 동의를 확인해주세요.'); return; }
+  const payload = { card_id: 'session-exit', helpful: Number(satisfaction) >= 4,
+    comment: document.getElementById('feedback-comment').value.trim() || `만족도 ${satisfaction}/5`, consent: true };
+  try {
+    const response = await fetch('/api/feedback', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    if (!response.ok) throw new Error('feedback');
+    document.getElementById('feedback-dialog').close();
+    showToast('소중한 의견을 저장했어요. 고마워요.');
+  } catch (error) { showToast('저장하지 못했어요. 잠시 후 다시 시도해주세요.'); }
+});
+
 backButton.addEventListener('click', () => {
   historyStack.pop();
   showScreen(historyStack.at(-1) || 'home', false);

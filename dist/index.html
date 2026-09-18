@@ -69,6 +69,7 @@
           <div class="progress-track" aria-label="미션 진행률"><span id="mission-progress"></span></div>
           <button class="secondary-button" type="button" id="mission-button">미션 시작하기</button>
         </div>
+        <button class="text-button session-end-button" type="button" data-open-dialog="feedback-dialog">오늘 사용을 마쳤어요 · 만족도 남기기</button>
       </section>
 
       <section class="screen" data-screen="diary" aria-labelledby="diary-heading">
@@ -211,6 +212,20 @@
 
   <dialog id="safety-dialog" class="info-dialog">
     <form method="dialog"><button class="icon-button" value="cancel" aria-label="닫기">×</button><span class="eyebrow">안전한 사용 안내</span><h2>Mindily는 마음을 정리하는 도구예요.</h2><p>감정 분석은 의료적 진단이 아니며, 중요한 판단을 대신하지 않아요. 스스로 또는 타인을 해칠 위험이 있거나 즉각적인 도움이 필요하면 지역 응급기관과 전문 상담기관에 연락해주세요.</p><button class="secondary-button" value="ok">확인했어요</button></form>
+  </dialog>
+
+  <dialog id="feedback-dialog" class="sheet-dialog">
+    <form method="dialog" class="sheet-content" id="feedback-form">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="section-heading"><div><span class="eyebrow">사용 후 한마디</span><h2>오늘 Mindily는 어땠나요?</h2></div><button class="icon-button" value="cancel" aria-label="닫기">×</button></div>
+      <p>일기 원문은 저장하지 않아요. 만족도와 짧은 의견만 선택적으로 남길 수 있어요.</p>
+      <fieldset class="form-block"><legend>사용 경험은 어땠나요?</legend><div class="stress-scale feedback-scale" role="radiogroup" aria-label="만족도">
+        <label><input type="radio" name="satisfaction" value="1" required><span>1</span></label><label><input type="radio" name="satisfaction" value="2"><span>2</span></label><label><input type="radio" name="satisfaction" value="3"><span>3</span></label><label><input type="radio" name="satisfaction" value="4"><span>4</span></label><label><input type="radio" name="satisfaction" value="5"><span>5</span></label>
+      </div></fieldset>
+      <label class="journal-field"><span>한마디 (선택)</span><textarea id="feedback-comment" maxlength="300" placeholder="가장 도움이 된 점이나 불편했던 점을 적어주세요."></textarea></label>
+      <label class="privacy-inline"><input type="checkbox" id="feedback-consent"> 익명 만족도 조사에 동의하고 제출합니다.</label>
+      <button class="primary-button" value="confirm" type="submit">만족도 제출하기</button>
+    </form>
   </dialog>
 
   <div class="toast" role="status" aria-live="polite" id="toast"></div>

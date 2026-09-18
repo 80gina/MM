@@ -27,6 +27,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [기능명세서](docs/기능명세서.md)
 - [체크리스트](docs/체크리스트.md)
 - [미션 수행 체크리스트](docs/미션수행체크리스트.md)
+- [팀 역할 및 기여 기록](docs/TEAM_ROLES.md)
 - [결과보고서](docs/결과보고서.md)
 - [기술 통합 보고서](docs/INTEGRATION_REPORT.md)
 - [시연보고서](docs/시연보고서.md)

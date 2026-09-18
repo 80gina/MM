@@ -26,8 +26,11 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 ## 제출 문서와 실제 확인 결과
 - [기능명세서](docs/기능명세서.md)
 - [체크리스트](docs/체크리스트.md)
-- [결과보고서](docs/INTEGRATION_REPORT.md)
+- [미션 수행 체크리스트](docs/미션수행체크리스트.md)
+- [결과보고서](docs/결과보고서.md)
+- [기술 통합 보고서](docs/INTEGRATION_REPORT.md)
 - [시연보고서](docs/시연보고서.md)
+- [시연계획서](docs/시연계획서.md)
 - [제출증빙자료](docs/제출증빙자료.md)
 - [피드백 기록](docs/피드백기록.md)
 - [로컬 데이터 확인](docs/DATA_REFERENCE.md)

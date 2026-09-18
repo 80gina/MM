@@ -55,53 +55,47 @@ document.getElementById('emotion-tags').addEventListener('click', (event) => {
   selectedTags = [...document.querySelectorAll('[data-tag].selected')].map((item) => item.dataset.tag);
 });
 
-const emotionRules = {
-  불안: ['불안', '걱정', '긴장', '면접', '발표', '잠도 안', '신경'],
-  슬픔: ['슬프', '눈물', '우울', '외롭', '속상', '허무'],
-  분노: ['화가', '화났', '짜증', '억울', '열받', '답답'],
-  기쁨: ['기쁘', '신나', '행복', '즐거', '좋았', '설레'],
-  상처: ['상처', '무시', '배신', '서운', '실망'],
-  당황: ['당황', '놀랐', '황당', '갑자기', '예상 못']
-};
-
 const emotionMeta = {
   불안: ['😰', '걱정되는'], 슬픔: ['😔', '지친'], 분노: ['😣', '답답한'], 기쁨: ['🙂', '기분 좋은'], 상처: ['🥺', '외로운'], 당황: ['😯', '초조한']
 };
 
-function analyzeDiary(text, stress) {
-  const scores = Object.fromEntries(Object.keys(emotionRules).map((key) => [key, 1]));
-  Object.entries(emotionRules).forEach(([emotion, keywords]) => keywords.forEach((word) => { if (text.includes(word)) scores[emotion] += 4; }));
-  selectedTags.forEach((tag) => {
-    if (['불안', '슬픔', '기쁨'].includes(tag)) scores[tag] += 5;
-    if (tag === '스트레스' || tag === '답답함') scores.분노 += 3;
-    if (tag === '외로움') scores.상처 += 4;
-    if (tag === '설렘') scores.기쁨 += 4;
-    if (tag === '피곤함') scores.슬픔 += 3;
+async function analyzeDiary(text, stress) {
+  const response = await fetch('/api/emotions/analyze', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text, self_reported_stress: stress}),
+    signal: AbortSignal.timeout(60000)
   });
-  const total = Object.values(scores).reduce((sum, value) => sum + value, 0);
-  const ranked = Object.entries(scores).map(([name, score]) => ({ name, percent: Math.round(score / total * 100) })).sort((a, b) => b.percent - a.percent);
-  const drift = 100 - ranked.reduce((sum, item) => sum + item.percent, 0);
-  ranked[0].percent += drift;
-  return { ranked, stress, text, date: new Date().toISOString(), detailedMood: emotionMeta[ranked[0].name][1] };
+  if (!response.ok) throw new Error('지금은 분석할 수 없어요. 잠시 후 다시 시도해주세요.');
+  const data = await response.json();
+  return {id: crypto.randomUUID(), ranked: data.labels.map(x => ({name:x.name, score:x.score})),
+    model: data.model, revision: data.revision, chunks: data.chunks,
+    stress, text, tags: [...selectedTags], date: new Date().toISOString(),
+    detailedMood: null, confirmedMood: null};
 }
 
-document.getElementById('diary-form').addEventListener('submit', (event) => {
+document.getElementById('diary-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const text = diaryText.value.trim();
-  if (text.length < 8) return toast('마음을 조금만 더 들려주세요. 여덟 글자 이상이면 좋아요.');
+  if (!text) return toast('마음을 한 문장으로 들려주세요.');
   const stress = Number(new FormData(event.currentTarget).get('stress'));
-  lastAnalysis = analyzeDiary(text, stress);
-  selectedMood = { name: lastAnalysis.detailedMood, color: emotionMeta[lastAnalysis.ranked[0].name][0] === '🙂' ? '#f0d25d' : '#ec846f' };
-  renderAnalysis();
-  saveEntry(lastAnalysis);
-  showScreen('analysis');
+  const button = event.currentTarget.querySelector('[type="submit"]');
+  if (button.disabled) return;
+  button.disabled = true; button.textContent = '마음을 읽고 있어요…';
+  try {
+    lastAnalysis = await analyzeDiary(text, stress);
+    selectedMood = {name:'직접 골라주세요', color:'#b7bfce'};
+    document.querySelectorAll('[data-mood]').forEach(x => x.classList.remove('selected'));
+    renderAnalysis(); saveEntry(lastAnalysis); showScreen('analysis');
+  } catch (error) {
+    toast(error.name === 'TimeoutError' ? '분석 시간이 길어졌어요. 글은 그대로 있으니 다시 시도해주세요.' : '분석 서버에 연결하지 못했어요. 글은 그대로 보관 중이에요.');
+  } finally { button.disabled = false; button.textContent = 'AI에게 마음 맡기기 ✨'; }
 });
 
 function renderAnalysis() {
   const top = lastAnalysis.ranked.slice(0, 3);
-  document.getElementById('emotion-result').innerHTML = top.map((item) => `<div class="emotion-pill"><span aria-hidden="true">${emotionMeta[item.name][0]}</span><strong>${item.name}</strong><small>${item.percent}%</small></div>`).join('');
+  document.getElementById('emotion-result').innerHTML = top.map((item) => `<div class="emotion-pill"><span aria-hidden="true">${emotionMeta[item.name][0]}</span><strong>${item.name}</strong><small>분류 점수 ${item.score.toFixed(3)}</small></div>`).join('');
   const level = lastAnalysis.stress >= 4 ? '높은' : lastAnalysis.stress === 3 ? '조금 높은' : '낮은';
-  document.getElementById('analysis-summary').textContent = `스트레스가 ${level} 상태로 보여요.`;
+  document.getElementById('analysis-summary').textContent = `직접 기록한 스트레스 ${lastAnalysis.stress}/5`;
   document.getElementById('analysis-meter').style.width = `${lastAnalysis.stress * 20}%`;
   const lead = top[0].name;
   const messages = {
@@ -120,9 +114,12 @@ function renderAnalysis() {
 function saveEntry(entry) {
   try {
     const records = JSON.parse(localStorage.getItem('mindily-records') || '[]');
+    const existing = records.findIndex(x => x.id && x.id === entry.id);
+    if (existing >= 0) records.splice(existing, 1);
     records.unshift(entry);
     localStorage.setItem('mindily-records', JSON.stringify(records.slice(0, 30)));
-  } catch (_) { /* localStorage may be unavailable in private contexts */ }
+    return true;
+  } catch (_) { toast('이 브라우저에서는 기록 저장이 안 돼요. 저장 설정을 확인해주세요.'); return false; }
 }
 
 function updateRecordUI(entry) {
@@ -132,7 +129,11 @@ function updateRecordUI(entry) {
   document.getElementById('record-mood').textContent = selectedMood.name;
   document.getElementById('record-stress').textContent = `스트레스 ${entry.stress}/5`;
   document.getElementById('record-copy').textContent = entry.text;
-  document.getElementById('latest-mood').textContent = `${selectedMood.name} 마음이에요`;
+  document.getElementById('latest-mood').textContent = selectedMood.name;
+  document.getElementById('home-coach-message').textContent = '기록한 마음을 확인했어요. 어떤 휴식이 필요한지 천천히 골라보세요.';
+  const dots = document.querySelector('.stress-dots');
+  dots.setAttribute('aria-label', `직접 기록한 스트레스 ${entry.stress}/5`);
+  [...dots.children].forEach((dot,i) => dot.classList.toggle('off', i >= entry.stress));
 }
 
 function updateMoodUI() {
@@ -150,8 +151,10 @@ document.getElementById('mood-meter').addEventListener('click', (event) => {
 
 document.getElementById('confirm-mood').addEventListener('click', () => {
   updateMoodUI();
-  if (lastAnalysis) updateRecordUI(lastAnalysis);
-  toast(`‘${selectedMood.name}’ 마음으로 기록했어요.`);
+  if (!lastAnalysis || selectedMood.name === '직접 골라주세요') return toast('먼저 마음을 선택해주세요.');
+  lastAnalysis.confirmedMood = {...selectedMood};
+  lastAnalysis.detailedMood = selectedMood.name;
+  if (saveEntry(lastAnalysis)) { updateRecordUI(lastAnalysis); toast(`‘${selectedMood.name}’ 마음으로 기록했어요.`); }
 });
 
 const missionButton = document.getElementById('mission-button');
@@ -217,7 +220,7 @@ function renderChart() {
 function hydrateLatest() {
   try {
     const entry = JSON.parse(localStorage.getItem('mindily-records') || '[]')[0];
-    if (entry) { lastAnalysis = entry; selectedMood.name = entry.detailedMood || selectedMood.name; updateRecordUI(entry); }
+    if (entry) { lastAnalysis = entry; selectedMood = entry.confirmedMood || {name: entry.detailedMood || '직접 골라주세요', color:'#b7bfce'}; updateRecordUI(entry); }
   } catch (_) {}
 }
 
@@ -233,4 +236,3 @@ function toast(message) {
 renderChart();
 hydrateLatest();
 showScreen('home', false);
-

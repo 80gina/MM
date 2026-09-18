@@ -27,7 +27,7 @@
       <div class="rail-art" aria-hidden="true">
         <span>☁</span><span>❋</span><span>⌁</span>
       </div>
-      <p class="privacy-note">기록은 이 기기에만 저장돼요.</p>
+      <p class="privacy-note">분석 시 글이 서버로 전송돼요. 기록은 이 브라우저에 저장돼요.</p>
     </aside>
 
     <main id="app-main" class="phone" aria-live="polite">
@@ -53,16 +53,16 @@
         <div class="section-heading"><h3>오늘의 상태</h3><button type="button" class="text-button" data-go="records">기록 보기</button></div>
         <div class="card status-card">
           <div class="mood-face" aria-hidden="true">😮‍💨</div>
-          <div class="status-copy"><strong id="latest-mood">조금 지쳐있어요</strong><small>AI의 제안이며, 언제든 수정할 수 있어요.</small></div>
-          <div class="stress-dots" aria-label="스트레스 5점 중 3점"><i></i><i></i><i></i><i class="off"></i><i class="off"></i></div>
+          <div class="status-copy"><strong id="latest-mood">아직 기록이 없어요</strong><small>내가 선택한 마음을 기록해요.</small></div>
+          <div class="stress-dots" aria-label="기록 전 스트레스 미선택"><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i></div>
         </div>
 
         <div class="companion-card card">
           <div class="coach-avatar" aria-hidden="true">☁</div>
-          <div><span class="eyebrow">AI의 한마디</span><p id="home-coach-message">최근 며칠 동안 조금 피곤한 날이 많았어요. 오늘은 잠시 쉬어갈 자리를 만들어볼까요?</p></div>
+          <div><span class="eyebrow">마음을 위한 한마디</span><p id="home-coach-message">오늘의 마음을 기록하면 함께 살펴볼 수 있어요.</p></div>
         </div>
 
-        <div class="section-heading"><h3>오늘의 작은 미션</h3><span class="soft-chip">약 5분</span></div>
+        <div class="section-heading"><h3>오늘의 작은 미션</h3><span class="soft-chip">시연 · 약 5초</span></div>
         <div class="card mission-card">
           <div class="mission-icon" aria-hidden="true">🌿</div>
           <div><strong>휴대폰을 내려놓고<br>창밖을 바라보기</strong><p>당장 해결하지 않아도 되는 생각은 잠시 내려두어요.</p></div>
@@ -103,7 +103,7 @@
             <div class="scale-labels"><span>낮음</span><span>매우 높음</span></div>
           </fieldset>
 
-          <p class="privacy-inline"><span aria-hidden="true">♡</span> 이 데모의 일기는 브라우저 안에만 저장돼요.</p>
+          <p class="privacy-inline"><span aria-hidden="true">♡</span> 분석을 누르면 일기가 모델 서버로 전송돼요. 서버는 원문을 저장하지 않으며, 기록은 이 브라우저에 저장돼요.</p>
           <button class="primary-button submit-button" type="submit">AI에게 마음 맡기기 <span aria-hidden="true">✨</span></button>
         </form>
       </section>
@@ -122,19 +122,19 @@
           <div class="card-label">감정 신호</div>
           <p class="analysis-summary" id="analysis-summary">스트레스가 조금 높은 상태로 보여요.</p>
           <div class="meter"><span id="analysis-meter"></span></div>
-          <small class="model-note">KcELECTRA 감정 대분류를 바탕으로 한 데모 결과예요.</small>
+          <small class="model-note">실제 KcELECTRA 분류 점수예요. 감정의 비율이나 진단 결과가 아니에요.</small>
         </div>
 
         <div class="card coach-note">
           <div class="coach-avatar" aria-hidden="true">☁</div>
-          <div><span class="eyebrow">AI의 한마디</span><p id="analysis-message"></p></div>
+          <div><span class="eyebrow">마음을 위한 한마디</span><p id="analysis-message"></p></div>
         </div>
 
         <div class="section-heading"><h3>내 마음과 맞나요?</h3><button type="button" class="text-button" data-open-dialog="mood-dialog">무드 미터에서 수정</button></div>
         <button class="mood-confirm card" type="button" data-open-dialog="mood-dialog">
-          <span class="mood-dot" id="mood-dot"></span><span><strong id="selected-detailed-mood">걱정되는</strong><small>AI가 제안한 세부 감정</small></span><span aria-hidden="true">›</span>
+          <span class="mood-dot" id="mood-dot"></span><span><strong id="selected-detailed-mood">걱정되는</strong><small>사용자가 선택하는 세부 감정</small></span><span aria-hidden="true">›</span>
         </button>
-        <button class="primary-button" type="button" data-go="coach">이 마음에 맞는 휴식 보기</button>
+        <button class="primary-button" type="button" data-go="coach">휴식 활동 보기</button>
       </section>
 
       <section class="screen" data-screen="coach" aria-labelledby="coach-heading">
@@ -158,7 +158,7 @@
       </section>
 
       <section class="screen" data-screen="chat" aria-labelledby="chat-heading">
-        <div class="chat-heading"><div class="coach-avatar" aria-hidden="true">☁</div><div><h2 id="chat-heading">마음 친구</h2><span><i></i> 천천히 듣고 있어요</span></div></div>
+        <div class="chat-heading"><div class="coach-avatar" aria-hidden="true">☁</div><div><h2 id="chat-heading">마음 친구</h2><span><i></i> 템플릿 대화 시연</span></div></div>
         <div class="chat-thread" id="chat-thread">
           <div class="message ai"><small>Mindily</small><p>오늘 여러 가지 일이 겹쳐 마음의 여유가 줄어든 것 같아요. 가장 마음에 걸리는 일이 있었나요?</p></div>
           <div class="message user"><p>오늘 발표를 망친 것 같아서 계속 생각나.</p></div>
@@ -172,11 +172,11 @@
         <div class="screen-intro"><span class="eyebrow">나의 마음 기록</span><h2 id="records-heading">감정은 매일 달라도 괜찮아요.</h2><p>평가보다 흐름을 발견하는 데 집중해요.</p></div>
         <div class="segmented" role="tablist" aria-label="기록 기간"><button role="tab" aria-selected="true">주간</button><button role="tab" aria-selected="false">월간</button></div>
         <div class="card chart-card">
-          <div class="section-heading"><h3>이번 주 감정 흐름</h3><span class="soft-chip">9월 10–16일</span></div>
-          <div class="emotion-chart" id="emotion-chart" aria-label="이번 주 감정 흐름 그래프"></div>
+          <div class="section-heading"><h3>감정 흐름 예시</h3><span class="soft-chip">샘플 데이터</span></div>
+          <div class="emotion-chart" id="emotion-chart" aria-label="감정 흐름 예시 그래프"></div>
           <div class="chart-axis"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
         </div>
-        <div class="card pattern-card"><div class="pattern-icon" aria-hidden="true">◷</div><div><span class="eyebrow">AI가 발견한 패턴</span><p>평일 저녁에 스트레스가 높아지는 경향이 있어요. 충분히 쉰 다음 날에는 편안한 감정이 조금 늘었어요.</p></div></div>
+        <div class="card pattern-card"><div class="pattern-icon" aria-hidden="true">◷</div><div><span class="eyebrow">패턴 안내 예시</span><p>실제 기록 기반 패턴 분석은 다음 단계에서 연결합니다. 위 그래프는 화면 구성 예시예요.</p></div></div>
         <div class="card recent-entry"><div class="section-heading"><h3>최근 기록</h3><span id="record-date">오늘</span></div><div class="entry-title"><span id="record-emoji">😮‍💨</span><strong id="record-mood">걱정되는</strong><span class="soft-chip" id="record-stress">스트레스 3/5</span></div><p id="record-copy">오늘의 마음을 기록하면 여기에 일기와 AI가 정리한 감정이 남아요.</p></div>
       </section>
 
@@ -217,4 +217,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-

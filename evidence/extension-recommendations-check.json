@@ -1,0 +1,9 @@
+{
+  "checked_on": "2026-09-19",
+  "scope": "source-backed recommendation catalog and UI rendering",
+  "implemented_kinds": ["꽃·나무", "필사", "음악", "취미"],
+  "source_policy": "Each card has an HTTPS source link; music is a manual search link and does not autoplay; copying card does not store copyrighted text.",
+  "location_features": "Running routes and nearby places/restaurants remain proposal-only. No location permission is requested or stored.",
+  "automated_check": "python test_healing.py",
+  "limits": ["No live location or business-hours lookup", "No automatic music playback", "Recommendation usefulness still needs the five-user test"]
+}

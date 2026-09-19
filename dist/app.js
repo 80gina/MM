@@ -155,8 +155,8 @@ async function loadHealingRecommendations() {
       data = await response.json();
     }
     const list = document.querySelector('.recommend-list');
-    list.innerHTML = data.cards.slice(0, 4).map((card, index) => `<article class="card recommendation ${index === 0 ? 'featured' : ''}">
-      <div class="rec-icon ${index % 2 ? 'blue' : 'mint'}" aria-hidden="true">${card.kind === '음악' ? '♫' : card.kind === '감각활동' ? '◌' : '🌱'}</div>
+    list.innerHTML = data.cards.slice(0, 8).map((card, index) => `<article class="card recommendation ${index === 0 ? 'featured' : ''}">
+      <div class="rec-icon ${index % 2 ? 'blue' : 'mint'}" aria-hidden="true">${card.kind === '음악' ? '♫' : card.kind === '필사' ? '✎' : card.kind === '꽃·나무' ? '🌿' : card.kind === '취미' ? '✦' : card.kind === '감각활동' ? '◌' : '🌱'}</div>
       <div><span class="soft-chip">${index === 0 ? '1순위 추천' : escapeHtml(card.kind)}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.description)}</p></div>
       ${card.id === 'breathing-1m' ? '<button class="secondary-button" type="button" data-start-breath>1분 시작하기</button>' : ''}
       ${card.source_url?.startsWith('https://') ? `<a class="secondary-button" href="${escapeHtml(card.source_url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(card.source_title)} 자료 새 창에서 보기">${escapeHtml(card.source_title)} ↗</a>` : ''}

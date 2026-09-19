@@ -15,6 +15,7 @@ with tempfile.TemporaryDirectory() as directory:
     assert response.status_code == 200
     cards = response.json()['cards']
     assert cards and all(card['source_url'].startswith('https://') for card in cards)
+    assert {'꽃·나무', '필사', '음악', '취미'} <= {card['kind'] for card in cards}
     assert response.json()['personalized'] is False
     token = 'a' * 64
     declined = client.post('/api/memory', json={

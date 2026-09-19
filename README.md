@@ -8,7 +8,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 2. 감정 태그와 스트레스 정도 선택
 3. 실제 KcELECTRA 모델의 6개 감정 분류 점수 확인
 4. 무드 미터에서 세부 감정을 사용자가 직접 수정
-5. 도구 호출형 코치의 감정 분석·출처 표시 힐링 추천, 1분 호흡, 규칙 기반 대화와 감정 정리
+5. 도구 호출형 코치의 감정 분석·출처 표시 힐링 추천, 꽃·나무·필사·음악·취미 확장 카드, 1분 호흡, 규칙 기반 대화와 감정 정리
 6. 브라우저 일기 기록과 사용 후 1~5점 만족도 저장
 7. 동의한 선호 활동 한 종류 기억·삭제. 30일 뒤에는 이전 선호를 추천에 사용하지 않음
 
@@ -43,6 +43,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [로컬 데이터 확인](docs/DATA_REFERENCE.md)
 - [실제 API 검증 결과](evidence/api-check.json)
 - [Agent 도구 호출 검증](evidence/agent-check.json)
+- [확장 추천 카드 검증](evidence/extension-recommendations-check.json)
 - [로컬 데이터 전수 통계](evidence/training-data-audit.json)
 - [파일럿 추가 학습 결과](evidence/team-motion-training.json)
 - [임시 HTTPS 접속·설문 자체 점검](evidence/quick-tunnel-smoke.json)

@@ -55,6 +55,7 @@ class Diary(BaseModel):
 class AgentRequest(Diary):
     context: str = Field(default='diary', pattern='^(diary|chat)$')
     memory_token: Optional[str] = Field(default=None, min_length=32, max_length=128)
+    known_emotion: Optional[str] = Field(default=None, pattern='^(불안|슬픔|분노|기쁨|상처|당황)$')
 
 
 class HealingRequest(BaseModel):
@@ -132,6 +133,7 @@ def coach(request: AgentRequest):
         lambda text, stress: analyze(Diary(text=text, self_reported_stress=stress)),
         lambda emotion, stress, token: recommend_healing(
             HealingRequest(emotion=emotion, stress=stress, minutes=20, memory_token=token)),
+        request.known_emotion,
     )
 
 

@@ -301,7 +301,8 @@ document.getElementById('chat-form').addEventListener('submit', async (event) =>
   try {
     const response = await fetch('/api/agent/coach', {method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({text: value, self_reported_stress: lastAnalysis?.stress || 3,
-        context: 'chat', memory_token: memoryToken}), signal: AbortSignal.timeout(60000)});
+        context: 'chat', memory_token: memoryToken, known_emotion: lastAnalysis?.ranked?.[0]?.name || null}),
+      signal: AbortSignal.timeout(60000)});
     if (!response.ok) throw new Error('coach');
     const result = await response.json();
     const card = result.recommendation?.cards?.[0];

@@ -1,0 +1,23 @@
+{
+  "checked_on": "2026-09-19",
+  "data_type": "synthetic preference only",
+  "local_test": "python test_memory_restart.py",
+  "local_results": [
+    "preference survived a new process",
+    "SQLite stored a hash rather than the raw token",
+    "explicit deletion removed the preference",
+    "a preference older than 30 days was not returned and was purged"
+  ],
+  "temporary_https_results": {
+    "saved": true,
+    "remembered": "걷기",
+    "deleted": true,
+    "after_delete": null
+  },
+  "limits": [
+    "Expired entries are purged on the next memory request, not by a background timer",
+    "A lost browser token cannot immediately delete its old server record",
+    "Quick Tunnel does not prove permanent hosted persistence",
+    "No real participant data was used"
+  ]
+}

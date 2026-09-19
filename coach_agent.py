@@ -18,18 +18,25 @@ def choose_intent(text: str, context: str) -> str:
     return 'rest' if any(word in text for word in REST_WORDS) else 'understand'
 
 
-def run_coach_agent(text, stress, context, memory_token, analyze_tool, recommend_tool):
+def run_coach_agent(text, stress, context, memory_token, analyze_tool, recommend_tool, known_emotion=None):
     """Plan a bounded sequence, invoke tools, and return a redacted execution trace."""
     intent = choose_intent(text, context)
-    analysis = analyze_tool(text, stress)
-    emotion = analysis['labels'][0]['name']
-    trace = [{'tool': 'analyze_emotion', 'status': 'completed'}]
+    analysis = None
+    trace = []
+    if context == 'chat' and intent == 'rest':
+        # A request such as "쉬는 방법 추천해줘" contains no reliable emotion evidence.
+        emotion = known_emotion or '미상'
+    else:
+        analysis = analyze_tool(text, stress)
+        emotion = analysis['labels'][0]['name']
+        trace.append({'tool': 'analyze_emotion', 'status': 'completed'})
     recommendation = None
     if intent in ('understand_and_rest', 'rest'):
         recommendation = recommend_tool(emotion, stress, memory_token)
         trace.append({'tool': 'recommend_healing', 'status': 'completed'})
 
-    message = REFLECTIONS.get(emotion, '말해줘서 고마워요. 지금 마음을 조금 더 들려주세요.')
+    message = ('쉬는 방법을 찾고 계시군요.' if context == 'chat' and intent == 'rest'
+               else REFLECTIONS.get(emotion, '말해줘서 고마워요. 지금 마음을 조금 더 들려주세요.'))
     if recommendation and recommendation['cards']:
         card = recommendation['cards'][0]
         message += f" 지금은 ‘{card['title']}’ 활동을 천천히 시도해 볼 수 있어요."

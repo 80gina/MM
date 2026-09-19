@@ -11,6 +11,7 @@
   "temporary_public_url_checked": "https://vessel-injuries-athens-boulevard.trycloudflare.com/",
   "public_api_checked": ["GET /api/health ready", "POST /api/agent/coach returned rest, 불안, analyze_emotion and recommend_healing, 1분 호흡하기"],
   "browser_checked": ["chat returned rule-based response and NHS source link", "diary returned emotion scores, self-reported stress and sourced coach message"],
+  "subsequent_fix": "Pure rest requests now use a neutral phrase and do not infer emotion from an instruction-only message. Confirmed by test_agent.py, temporary HTTPS API, and browser chat with a synthetic request.",
   "automated_checks": ["python test_agent.py", "python test_feedback.py", "python test_healing.py", "python test_api.py", "node --check dist/app.js"],
   "limits": ["No LLM-generated answer or full RAG", "Quick Tunnel is temporary and may expire", "No real user responses"]
 }

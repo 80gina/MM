@@ -8,15 +8,15 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 2. 감정 태그와 스트레스 정도 선택
 3. 실제 KcELECTRA 모델의 6개 감정 분류 점수 확인
 4. 무드 미터에서 세부 감정을 사용자가 직접 수정
-5. 출처가 표시된 힐링 활동 추천과 1분 호흡, 템플릿 대화 시연
+5. 도구 호출형 코치의 감정 분석·출처 표시 힐링 추천과 1분 호흡, 규칙 기반 대화
 6. 브라우저 일기 기록과 사용 후 1~5점 만족도 저장
 7. 동의한 선호 활동 한 종류 기억·삭제
 
 ## 중요한 구분
 
-- 이번 소스의 감정 분석은 실제 GGARA02/kcelectra-korean-emotion API입니다. 외부 배포 갱신은 아직 하지 않았습니다.
+- 감정 분석은 실제 GGARA02/kcelectra-korean-emotion 모델을 실행합니다. `/api/agent/coach`가 일기 또는 대화 의도를 구분해 `analyze_emotion`과 `recommend_healing`을 순서대로 호출합니다.
 - 모델 버전: 2eaf89d8d2cbfd902b93e5ec989db2ec103806fb. 출처·이용 조건은 https://huggingface.co/GGARA02/kcelectra-korean-emotion 을 확인합니다. `team_motion` 데이터로 소규모 추가 학습을 시험했으나 성능이 낮아 앱의 기본 모델은 공개 모델입니다.
-- 채팅은 템플릿, 그래프·패턴은 예시, 미션은 짧은 시연입니다. 출처 검색형 활동 추천과 선호 기억은 구현했으나 생성형 Agent·LLM 기반 RAG·외부 배포·실제 5명 테스트는 미완료입니다.
+- 코치 문장은 규칙 기반 템플릿이며 자유 생성형 LLM 대화가 아닙니다. 출처 검색형 활동 추천은 구현했지만 LLM 기반 RAG는 미완료입니다. 그래프·패턴은 예시이고 미션은 짧은 시연입니다. 외부 HTTPS는 임시 Quick Tunnel로 검증했으며 상시 배포와 실제 5명 테스트는 미완료입니다.
 - 만족도와 선호 기억은 서버 SQLite에, 일기 원문과 감정 기록은 브라우저 localStorage에 저장됩니다. 서버 저장에는 영속 디스크가 필요합니다.
 - 공개 KcELECTRA 모델 연결 지점과 데이터 계약은 `docs/BEGINNER_ROADMAP.md`에 정리했습니다.
 - 의료 진단이나 치료를 제공하지 않습니다.
@@ -40,6 +40,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [피드백 기록](docs/피드백기록.md)
 - [로컬 데이터 확인](docs/DATA_REFERENCE.md)
 - [실제 API 검증 결과](evidence/api-check.json)
+- [Agent 도구 호출 검증](evidence/agent-check.json)
 - [로컬 데이터 전수 통계](evidence/training-data-audit.json)
 - [파일럿 추가 학습 결과](evidence/team-motion-training.json)
 - [임시 HTTPS 접속·설문 자체 점검](evidence/quick-tunnel-smoke.json)

@@ -1,0 +1,16 @@
+{
+  "checked_on": "2026-09-19",
+  "scope": "local API on port 8011 and temporary public HTTPS API/browser, synthetic text; not a real user test",
+  "input_example": "내일 발표가 걱정돼요. 지금은 쉬는 방법을 알고 싶어요.",
+  "intent": "understand_and_rest",
+  "top_emotion": "불안",
+  "tool_trace": ["analyze_emotion", "recommend_healing"],
+  "top_recommendation": "1분 호흡하기",
+  "source_url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/breathing-exercises-for-stress/",
+  "response_type": "rule_template",
+  "temporary_public_url_checked": "https://vessel-injuries-athens-boulevard.trycloudflare.com/",
+  "public_api_checked": ["GET /api/health ready", "POST /api/agent/coach returned rest, 불안, analyze_emotion and recommend_healing, 1분 호흡하기"],
+  "browser_checked": ["chat returned rule-based response and NHS source link", "diary returned emotion scores, self-reported stress and sourced coach message"],
+  "automated_checks": ["python test_agent.py", "python test_feedback.py", "python test_healing.py", "python test_api.py", "node --check dist/app.js"],
+  "limits": ["No LLM-generated answer or full RAG", "Quick Tunnel is temporary and may expire", "No real user responses"]
+}

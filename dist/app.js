@@ -87,15 +87,17 @@ const emotionMeta = {
 };
 
 async function analyzeDiary(text, stress) {
-  const response = await fetch('/api/emotions/analyze', {
+  const response = await fetch('/api/agent/coach', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({text, self_reported_stress: stress}),
+    body: JSON.stringify({text, self_reported_stress: stress, context: 'diary', memory_token: memoryToken}),
     signal: AbortSignal.timeout(60000)
   });
   if (!response.ok) throw new Error('지금은 분석할 수 없어요. 잠시 후 다시 시도해주세요.');
   const data = await response.json();
-  return {id: crypto.randomUUID(), ranked: data.labels.map(x => ({name:x.name, score:x.score})),
-    model: data.model, revision: data.revision, chunks: data.chunks,
+  const analysis = data.analysis;
+  return {id: crypto.randomUUID(), ranked: analysis.labels.map(x => ({name:x.name, score:x.score})),
+    model: analysis.model, revision: analysis.revision, chunks: analysis.chunks,
+    agentMessage: data.message, recommendation: data.recommendation,
     stress, text, tags: [...selectedTags], date: new Date().toISOString(),
     detailedMood: null, confirmedMood: null};
 }
@@ -133,7 +135,7 @@ function renderAnalysis() {
     상처: '관계 속에서 마음이 다친 흔적이 보여요. 그 서운함을 사소하게 여기지 않아도 괜찮아요.',
     당황: '예상하지 못한 일이 마음의 리듬을 흔든 것 같아요. 천천히 상황을 다시 정리해봐요.'
   };
-  document.getElementById('analysis-message').textContent = messages[lead];
+  document.getElementById('analysis-message').textContent = lastAnalysis.agentMessage || messages[lead];
   updateMoodUI();
   updateRecordUI(lastAnalysis);
   loadHealingRecommendations();
@@ -142,13 +144,16 @@ function renderAnalysis() {
 async function loadHealingRecommendations() {
   if (!lastAnalysis) return;
   try {
-    const response = await fetch('/api/healing/recommend', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({emotion: lastAnalysis.ranked[0].name, stress: lastAnalysis.stress, minutes: 20,
-        allow_location: false, memory_token: memoryToken})
-    });
-    if (!response.ok) throw new Error('recommendation');
-    const data = await response.json();
+    let data = lastAnalysis.recommendation;
+    if (!data) {
+      const response = await fetch('/api/healing/recommend', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({emotion: lastAnalysis.ranked[0].name, stress: lastAnalysis.stress, minutes: 20,
+          allow_location: false, memory_token: memoryToken})
+      });
+      if (!response.ok) throw new Error('recommendation');
+      data = await response.json();
+    }
     const list = document.querySelector('.recommend-list');
     list.innerHTML = data.cards.slice(0, 4).map((card, index) => `<article class="card recommendation ${index === 0 ? 'featured' : ''}">
       <div class="rec-icon ${index % 2 ? 'blue' : 'mint'}" aria-hidden="true">${card.kind === '음악' ? '♫' : card.kind === '감각활동' ? '◌' : '🌱'}</div>
@@ -172,6 +177,7 @@ document.getElementById('save-memory').addEventListener('click', async () => {
     localStorage.setItem('mindily-memory-token', token);
     memoryToken = token;
     document.getElementById('memory-status').textContent = `${preferred_kind} 활동을 기억했어요.`;
+    if (lastAnalysis) lastAnalysis.recommendation = null;
     loadHealingRecommendations();
   } catch (_) { toast('선호를 저장하지 못했어요. 다시 시도해주세요.'); }
 });
@@ -186,6 +192,7 @@ document.getElementById('delete-memory').addEventListener('click', async () => {
     memoryToken = null;
     document.getElementById('memory-consent').checked = false;
     document.getElementById('memory-status').textContent = '저장된 선호를 삭제했어요.';
+    if (lastAnalysis) lastAnalysis.recommendation = null;
     loadHealingRecommendations();
   } catch (_) { toast('삭제하지 못했어요. 다시 시도해주세요.'); }
 });
@@ -280,18 +287,30 @@ function startBreathing() {
 }
 document.querySelector('.close-breath').addEventListener('click', () => { clearInterval(breathTimer); document.getElementById('breath-dialog').close(); });
 
-document.getElementById('chat-form').addEventListener('submit', (event) => {
+document.getElementById('chat-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const input = document.getElementById('chat-input');
   const value = input.value.trim();
   if (!value) return;
+  const submit = event.currentTarget.querySelector('[type="submit"]');
+  if (submit.disabled) return;
+  submit.disabled = true;
   const thread = document.getElementById('chat-thread');
   thread.insertAdjacentHTML('beforeend', `<div class="message user"><p>${escapeHtml(value)}</p></div>`);
   input.value = '';
-  setTimeout(() => {
-    thread.insertAdjacentHTML('beforeend', '<div class="message ai"><small>Mindily</small><p>그 마음을 말해줘서 고마워요. 지금 가장 크게 느껴지는 감정 하나를 고른다면 무엇에 가까울까요?</p></div>');
+  try {
+    const response = await fetch('/api/agent/coach', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: value, self_reported_stress: lastAnalysis?.stress || 3,
+        context: 'chat', memory_token: memoryToken}), signal: AbortSignal.timeout(60000)});
+    if (!response.ok) throw new Error('coach');
+    const result = await response.json();
+    const card = result.recommendation?.cards?.[0];
+    const source = card?.source_url?.startsWith('https://')
+      ? `<p><a href="${escapeHtml(card.source_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.source_title)} 자료 보기 ↗</a></p>` : '';
+    thread.insertAdjacentHTML('beforeend', `<div class="message ai"><small>Mindily · 규칙 기반 응답</small><p>${escapeHtml(result.message)}</p>${source}</div>`);
     thread.parentElement.scrollTo({ top: thread.parentElement.scrollHeight, behavior: 'smooth' });
-  }, 650);
+  } catch (_) { thread.insertAdjacentHTML('beforeend', '<div class="message ai"><small>Mindily</small><p>지금은 연결이 어려워요. 잠시 후 다시 이야기해 주세요.</p></div>'); }
+  finally { submit.disabled = false; }
 });
 
 document.querySelector('.segmented').addEventListener('click', (event) => {

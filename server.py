@@ -16,6 +16,7 @@ from typing import Optional
 from feedback_db import save_feedback
 from healing_knowledge import retrieve_activities
 from memory_db import remember, recall, forget
+from coach_agent import run_coach_agent
 
 MODEL = os.getenv('MINDILY_MODEL_PATH', 'GGARA02/kcelectra-korean-emotion')
 REVISION = '2eaf89d8d2cbfd902b93e5ec989db2ec103806fb'
@@ -49,6 +50,11 @@ class Diary(BaseModel):
         if not value.strip():
             raise ValueError('일기를 입력해주세요.')
         return value.strip()
+
+
+class AgentRequest(Diary):
+    context: str = Field(default='diary', pattern='^(diary|chat)$')
+    memory_token: Optional[str] = Field(default=None, min_length=32, max_length=128)
 
 
 class HealingRequest(BaseModel):
@@ -116,6 +122,17 @@ def recommend_healing(request: HealingRequest):
     return {'tool': 'recommend_healing', 'emotion': request.emotion,
             'stress': request.stress, 'cards': cards,
             'location_available': False, 'personalized': bool(preferred)}
+
+
+@app.post('/api/agent/coach')
+def coach(request: AgentRequest):
+    """Route a diary or chat turn through the real model and sourced activity tool."""
+    return run_coach_agent(
+        request.text, request.self_reported_stress, request.context, request.memory_token,
+        lambda text, stress: analyze(Diary(text=text, self_reported_stress=stress)),
+        lambda emotion, stress, token: recommend_healing(
+            HealingRequest(emotion=emotion, stress=stress, minutes=20, memory_token=token)),
+    )
 
 
 @app.post('/api/memory')

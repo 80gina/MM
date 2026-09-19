@@ -18,7 +18,8 @@ def choose_intent(text: str, context: str) -> str:
     return 'rest' if any(word in text for word in REST_WORDS) else 'understand'
 
 
-def run_coach_agent(text, stress, context, memory_token, analyze_tool, recommend_tool, known_emotion=None):
+def run_coach_agent(text, stress, context, memory_token, analyze_tool, recommend_tool,
+                    known_emotion=None, grounding_tool=None):
     """Plan a bounded sequence, invoke tools, and return a redacted execution trace."""
     intent = choose_intent(text, context)
     analysis = None
@@ -35,6 +36,11 @@ def run_coach_agent(text, stress, context, memory_token, analyze_tool, recommend
         recommendation = recommend_tool(emotion, stress, memory_token)
         trace.append({'tool': 'recommend_healing', 'status': 'completed'})
 
+    grounding = None
+    if recommendation and grounding_tool:
+        grounding = grounding_tool(emotion, stress)
+        trace.append({'tool': 'retrieve_grounding', 'status': 'completed'})
+
     message = ('쉬는 방법을 찾고 계시군요.' if context == 'chat' and intent == 'rest'
                else REFLECTIONS.get(emotion, '말해줘서 고마워요. 지금 마음을 조금 더 들려주세요.'))
     if recommendation and recommendation['cards']:
@@ -47,6 +53,7 @@ def run_coach_agent(text, stress, context, memory_token, analyze_tool, recommend
         'response_type': 'rule_template',
         'analysis': analysis,
         'recommendation': recommendation,
+        'grounding': grounding,
         'tool_trace': trace,
         'disclaimer': '감정 분류와 활동 제안은 의료적 진단이 아니며, 코치 문장은 규칙 기반입니다.',
     }

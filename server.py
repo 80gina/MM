@@ -17,6 +17,7 @@ from feedback_db import save_feedback
 from healing_knowledge import retrieve_activities
 from memory_db import remember, recall, forget
 from coach_agent import run_coach_agent
+from rag import answer_with_grounding, retrieve_grounding
 
 MODEL = os.getenv('MINDILY_MODEL_PATH', 'GGARA02/kcelectra-korean-emotion')
 REVISION = '2eaf89d8d2cbfd902b93e5ec989db2ec103806fb'
@@ -125,6 +126,22 @@ def recommend_healing(request: HealingRequest):
             'location_available': False, 'personalized': bool(preferred)}
 
 
+@app.post('/api/rag/search')
+def rag_search(request: HealingRequest):
+    """Return source chunks selected for a grounded response."""
+    return {'tool': 'retrieve_grounding', 'emotion': request.emotion,
+            'stress': request.stress, 'sources': retrieve_grounding(
+                request.emotion, request.stress, request.minutes)}
+
+
+@app.post('/api/rag/answer')
+def rag_answer(request: HealingRequest):
+    """Return a grounded fallback answer and its source context."""
+    return {'tool': 'rag_answer', 'emotion': request.emotion,
+            'stress': request.stress, **answer_with_grounding(
+                request.emotion, request.stress, request.minutes)}
+
+
 @app.post('/api/agent/coach')
 def coach(request: AgentRequest):
     """Route a diary or chat turn through the real model and sourced activity tool."""
@@ -134,6 +151,7 @@ def coach(request: AgentRequest):
         lambda emotion, stress, token: recommend_healing(
             HealingRequest(emotion=emotion, stress=stress, minutes=20, memory_token=token)),
         request.known_emotion,
+        lambda emotion, stress: answer_with_grounding(emotion, stress, minutes=20),
     )
 
 

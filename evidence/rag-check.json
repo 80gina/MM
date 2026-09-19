@@ -1,0 +1,14 @@
+{
+  "checked_on": "2026-09-19",
+  "scope": "local FastAPI retrieval and deterministic grounded answer; synthetic input",
+  "input": {"emotion": "불안", "stress": 4, "minutes": 20},
+  "search_endpoint": "/api/rag/search",
+  "answer_endpoint": "/api/rag/answer",
+  "source_count_asserted": true,
+  "https_sources_asserted": true,
+  "generation": "deterministic_fallback",
+  "llm_adapter": "not_configured",
+  "safety_assertion": "answer contains no diagnosis wording",
+  "agent_trace": ["analyze_emotion", "recommend_healing", "retrieve_grounding"],
+  "limits": ["No external LLM credential configured", "No real user responses"]
+}

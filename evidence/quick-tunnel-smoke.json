@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-19",
+  "environment": "Cloudflare Quick Tunnel to local FastAPI on 127.0.0.1:8010",
+  "url": "temporary URL withheld from public repository; recorded in local .local-tools/session.txt",
+  "checks": {
+    "https_home": "HTTP 200, title Mindily — 오늘의 마음",
+    "https_health": "status ready, GGARA02/kcelectra-korean-emotion",
+    "https_analyze": "synthetic diary, top label 기쁨, one chunk",
+    "survey_dialog": "opened in browser; close button bug found and fixed; closed without selecting a score after fix"
+  },
+  "real_users_tested": 0,
+  "feedback_submissions_counted": 0,
+  "limitations": "Temporary URL, no uptime guarantee; no phone-device screenshot or five-user feedback yet"
+}

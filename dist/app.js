@@ -35,6 +35,8 @@ document.addEventListener('click', (event) => {
   if (go) showScreen(go.dataset.go);
   const opener = event.target.closest('[data-open-dialog]');
   if (opener) document.getElementById(opener.dataset.openDialog)?.showModal();
+  const closer = event.target.closest('[data-close-dialog]');
+  if (closer) document.getElementById(closer.dataset.closeDialog)?.close();
   const toastTarget = event.target.closest('[data-toast]');
   if (toastTarget) toast(toastTarget.dataset.toast);
   if (event.target.closest('[data-start-breath]')) startBreathing();

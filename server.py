@@ -13,12 +13,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
-from uuid import uuid4
+from feedback_db import save_feedback
+from healing_knowledge import retrieve_activities
+from memory_db import remember, recall, forget
 
 MODEL = os.getenv('MINDILY_MODEL_PATH', 'GGARA02/kcelectra-korean-emotion')
 REVISION = '2eaf89d8d2cbfd902b93e5ec989db2ec103806fb'
 inference_lock = Lock()
-feedback_store = []
 
 
 @asynccontextmanager
@@ -55,11 +56,22 @@ class HealingRequest(BaseModel):
     stress: int = Field(ge=1, le=5, strict=True)
     minutes: int = Field(default=5, ge=1, le=120, strict=True)
     allow_location: bool = False
+    memory_token: Optional[str] = Field(default=None, min_length=32, max_length=128)
+
+
+class MemoryRequest(BaseModel):
+    token: str = Field(min_length=32, max_length=128)
+
+
+class MemorySave(MemoryRequest):
+    preferred_kind: str = Field(pattern='^(호흡|감각활동|걷기)$')
+    consent: bool
 
 
 class Feedback(BaseModel):
     card_id: str = Field(min_length=1, max_length=80)
-    helpful: bool
+    helpful: Optional[bool] = None
+    satisfaction: Optional[int] = Field(default=None, ge=1, le=5, strict=True)
     comment: Optional[str] = Field(default=None, max_length=300)
     consent: bool = False
 
@@ -96,37 +108,46 @@ def analyze(diary: Diary):
 
 @app.post('/api/healing/recommend')
 def recommend_healing(request: HealingRequest):
-    """감정 결과를 읽고 추천 도구가 선택한 카드 목록을 반환한다.
-
-    위치는 명시적으로 허용된 경우에도 장소 추천의 자리표시자만 반환하며 좌표를 저장하지 않는다.
-    """
-    cards = [
-        {'id': 'breathing-1m', 'kind': '호흡', 'title': '1분 호흡하기',
-         'description': '복잡한 생각을 잠시 내려놓고 호흡에 집중해보세요.', 'minutes': 1},
-        {'id': 'journaling-3m', 'kind': '필사·감정정리', 'title': '감정 정리하기',
-         'description': '지금 마음에 남은 생각을 세 문장으로 적어보세요.', 'minutes': 3},
-        {'id': 'music-calm', 'kind': '음악', 'title': '차분한 음악 듣기',
-         'description': '현재 기분에 맞는 짧은 휴식 음악을 선택해보세요.', 'minutes': 5},
-    ]
-    if request.emotion in {'불안', '걱정', '스트레스', '답답함'} or request.stress >= 4:
-        cards.insert(0, {'id': 'grounding-5-4-3-2-1', 'kind': '감각활동',
-                         'title': '5-4-3-2-1 감각 돌아보기',
-                         'description': '주변에서 보이는 것과 들리는 것을 천천히 세어보세요.', 'minutes': 5})
-    if request.allow_location:
-        cards.append({'id': 'nearby-placeholder', 'kind': '장소', 'title': '근처 산책 장소 찾기',
-                      'description': '위치 권한을 사용해 안전한 장소를 검색할 수 있어요. 좌표는 저장하지 않습니다.', 'minutes': 20})
+    """Retrieve sourced activities; location lookup is not implemented yet."""
+    cards = retrieve_activities(request.emotion, request.stress, request.minutes)
+    preferred = recall(request.memory_token) if request.memory_token else None
+    if preferred:
+        cards.sort(key=lambda card: card['kind'] == preferred, reverse=True)
     return {'tool': 'recommend_healing', 'emotion': request.emotion,
-            'stress': request.stress, 'cards': [card for card in cards if card['minutes'] <= request.minutes or card['minutes'] == 1]}
+            'stress': request.stress, 'cards': cards,
+            'location_available': False, 'personalized': bool(preferred)}
+
+
+@app.post('/api/memory')
+def save_memory(request: MemorySave):
+    if not request.consent:
+        raise HTTPException(422, '기억 저장 동의가 필요해요.')
+    remember(request.token, request.preferred_kind)
+    return {'saved': True, 'preferred_kind': request.preferred_kind}
+
+
+@app.post('/api/memory/read')
+def read_memory(request: MemoryRequest):
+    return {'preferred_kind': recall(request.token)}
+
+
+@app.post('/api/memory/delete')
+def delete_memory(request: MemoryRequest):
+    return {'deleted': forget(request.token)}
 
 
 @app.post('/api/feedback')
 def save_user_feedback(feedback: Feedback):
-    """동의한 경우에만 원문 없이 추천 카드 평가를 임시 집계한다."""
-    if feedback.consent:
-        feedback_store.append({'id': str(uuid4()), 'card_id': feedback.card_id,
-                               'helpful': feedback.helpful, 'comment': feedback.comment})
-    return {'tool': 'save_user_feedback', 'saved': feedback.consent,
-            'message': '의견을 저장했어요.' if feedback.consent else '동의하지 않아 저장하지 않았어요.'}
+    """Store consented feedback in SQLite; diary text and location are never included."""
+    if not feedback.consent:
+        return {'tool': 'save_user_feedback', 'saved': False,
+                'message': '동의하지 않아 저장하지 않았어요.'}
+    if feedback.satisfaction is None and feedback.helpful is None:
+        raise HTTPException(422, '만족도 또는 도움됨 평가를 선택해주세요.')
+    helpful = feedback.helpful if feedback.helpful is not None else feedback.satisfaction >= 4
+    receipt = save_feedback(feedback.card_id, helpful, feedback.satisfaction, feedback.comment)
+    return {'tool': 'save_user_feedback', 'saved': True,
+            'receipt': receipt, 'message': '의견을 저장했어요.'}
 
 
 app.mount('/', StaticFiles(directory=ROOT / 'dist', html=True), name='ui')

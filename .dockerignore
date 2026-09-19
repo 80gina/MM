@@ -4,3 +4,5 @@ models
 evidence
 __pycache__
 .env*
+data
+artifacts

@@ -11,6 +11,8 @@ let selectedMood = { name: '걱정되는', color: '#ec846f' };
 let lastAnalysis = null;
 let missionTimer = null;
 let breathTimer = null;
+let memoryToken = null;
+try { memoryToken = localStorage.getItem('mindily-memory-token'); } catch (_) {}
 
 const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
@@ -35,21 +37,29 @@ document.addEventListener('click', (event) => {
   if (opener) document.getElementById(opener.dataset.openDialog)?.showModal();
   const toastTarget = event.target.closest('[data-toast]');
   if (toastTarget) toast(toastTarget.dataset.toast);
+  if (event.target.closest('[data-start-breath]')) startBreathing();
 });
 
 document.getElementById('feedback-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const satisfaction = document.querySelector('input[name="satisfaction"]:checked')?.value;
   const consent = document.getElementById('feedback-consent').checked;
-  if (!satisfaction || !consent) { showToast('만족도와 익명 제출 동의를 확인해주세요.'); return; }
-  const payload = { card_id: 'session-exit', helpful: Number(satisfaction) >= 4,
-    comment: document.getElementById('feedback-comment').value.trim() || `만족도 ${satisfaction}/5`, consent: true };
+  if (!satisfaction || !consent) { toast('만족도와 익명 제출 동의를 확인해주세요.'); return; }
+  const button = event.currentTarget.querySelector('[type="submit"]');
+  if (button.disabled) return;
+  button.disabled = true;
+  const payload = { card_id: 'session-exit', satisfaction: Number(satisfaction),
+    comment: document.getElementById('feedback-comment').value.trim() || null, consent: true };
   try {
     const response = await fetch('/api/feedback', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
     if (!response.ok) throw new Error('feedback');
+    const result = await response.json();
+    if (!result.saved) throw new Error('not saved');
     document.getElementById('feedback-dialog').close();
-    showToast('소중한 의견을 저장했어요. 고마워요.');
-  } catch (error) { showToast('저장하지 못했어요. 잠시 후 다시 시도해주세요.'); }
+    document.getElementById('feedback-form').reset();
+    toast('만족도를 저장했어요. 고마워요.');
+  } catch (error) { toast('저장하지 못했어요. 입력을 보관 중이니 다시 시도해주세요.'); }
+  finally { button.disabled = false; }
 });
 
 backButton.addEventListener('click', () => {
@@ -132,19 +142,60 @@ async function loadHealingRecommendations() {
   try {
     const response = await fetch('/api/healing/recommend', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({emotion: lastAnalysis.ranked[0].name, stress: lastAnalysis.stress, minutes: 20, allow_location: false})
+      body: JSON.stringify({emotion: lastAnalysis.ranked[0].name, stress: lastAnalysis.stress, minutes: 20,
+        allow_location: false, memory_token: memoryToken})
     });
     if (!response.ok) throw new Error('recommendation');
     const data = await response.json();
     const list = document.querySelector('.recommend-list');
     list.innerHTML = data.cards.slice(0, 4).map((card, index) => `<article class="card recommendation ${index === 0 ? 'featured' : ''}">
       <div class="rec-icon ${index % 2 ? 'blue' : 'mint'}" aria-hidden="true">${card.kind === '음악' ? '♫' : card.kind === '감각활동' ? '◌' : '🌱'}</div>
-      <div><span class="soft-chip">${index === 0 ? '1순위 추천' : card.kind}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.description)}</p></div>
-      <button class="secondary-button" type="button" data-toast="${escapeHtml(card.title)} 활동을 준비했어요.">시작하기</button>
+      <div><span class="soft-chip">${index === 0 ? '1순위 추천' : escapeHtml(card.kind)}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.description)}</p></div>
+      ${card.id === 'breathing-1m' ? '<button class="secondary-button" type="button" data-start-breath>1분 시작하기</button>' : ''}
+      ${card.source_url?.startsWith('https://') ? `<a class="secondary-button" href="${escapeHtml(card.source_url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(card.source_title)} 자료 새 창에서 보기">${escapeHtml(card.source_title)} ↗</a>` : ''}
     </article>`).join('');
   } catch (_) {
     // 기본 정적 추천 카드는 API 오류에도 그대로 사용할 수 있다.
   }
+}
+
+document.getElementById('save-memory').addEventListener('click', async () => {
+  if (!document.getElementById('memory-consent').checked) return toast('기억 저장 동의를 먼저 확인해주세요.');
+  const token = memoryToken || [...crypto.getRandomValues(new Uint8Array(32))].map(x => x.toString(16).padStart(2, '0')).join('');
+  const preferred_kind = document.getElementById('preferred-kind').value;
+  try {
+    const response = await fetch('/api/memory', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token, preferred_kind, consent: true})});
+    if (!response.ok) throw new Error('memory');
+    localStorage.setItem('mindily-memory-token', token);
+    memoryToken = token;
+    document.getElementById('memory-status').textContent = `${preferred_kind} 활동을 기억했어요.`;
+    loadHealingRecommendations();
+  } catch (_) { toast('선호를 저장하지 못했어요. 다시 시도해주세요.'); }
+});
+
+document.getElementById('delete-memory').addEventListener('click', async () => {
+  if (!memoryToken) return toast('저장된 선호가 없어요.');
+  try {
+    const response = await fetch('/api/memory/delete', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token: memoryToken})});
+    if (!response.ok) throw new Error('delete');
+    localStorage.removeItem('mindily-memory-token');
+    memoryToken = null;
+    document.getElementById('memory-consent').checked = false;
+    document.getElementById('memory-status').textContent = '저장된 선호를 삭제했어요.';
+    loadHealingRecommendations();
+  } catch (_) { toast('삭제하지 못했어요. 다시 시도해주세요.'); }
+});
+
+if (memoryToken) {
+  fetch('/api/memory/read', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({token: memoryToken})})
+    .then(response => response.json())
+    .then(data => { if (data.preferred_kind) {
+      document.getElementById('preferred-kind').value = data.preferred_kind;
+      document.getElementById('memory-status').textContent = `${data.preferred_kind} 활동을 기억하고 있어요.`;
+    } }).catch(() => {});
 }
 
 function saveEntry(entry) {
@@ -206,11 +257,12 @@ missionButton.addEventListener('click', () => {
       missionButton.textContent = '오늘의 미션 완료 ✓';
       missionButton.disabled = true;
       toast('잘했어요. 오늘 당신을 위해 잠시 시간을 내주었네요.');
+      document.getElementById('feedback-dialog').showModal();
     }
   }, 450);
 });
 
-document.querySelector('[data-start-breath]').addEventListener('click', () => {
+function startBreathing() {
   const dialog = document.getElementById('breath-dialog');
   dialog.showModal();
   let remaining = 60;
@@ -223,7 +275,7 @@ document.querySelector('[data-start-breath]').addEventListener('click', () => {
     document.getElementById('breath-time').textContent = `00:${String(remaining).padStart(2, '0')}`;
     if (remaining <= 0) { clearInterval(breathTimer); label.textContent = '잘했어요'; toast('1분 동안 내 마음 곁에 머물렀어요.'); }
   }, 1000);
-});
+}
 document.querySelector('.close-breath').addEventListener('click', () => { clearInterval(breathTimer); document.getElementById('breath-dialog').close(); });
 
 document.getElementById('chat-form').addEventListener('submit', (event) => {
@@ -259,6 +311,14 @@ function hydrateLatest() {
     if (entry) { lastAnalysis = entry; selectedMood = entry.confirmedMood || {name: entry.detailedMood || '직접 골라주세요', color:'#b7bfce'}; updateRecordUI(entry); }
   } catch (_) {}
 }
+
+document.getElementById('delete-records').addEventListener('click', () => {
+  if (!window.confirm('이 브라우저에 저장된 일기 원문과 감정 기록을 모두 삭제할까요? 복구할 수 없어요.')) return;
+  try {
+    localStorage.removeItem('mindily-records');
+    window.location.reload();
+  } catch (_) { toast('이 브라우저의 기록을 삭제할 수 없어요. 저장 설정을 확인해주세요.'); }
+});
 
 let toastTimeout;
 function toast(message) {

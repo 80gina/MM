@@ -18,6 +18,7 @@ from healing_knowledge import retrieve_activities
 from memory_db import remember, recall, forget
 from coach_agent import run_coach_agent
 from rag import answer_with_grounding, retrieve_grounding
+import llm
 
 MODEL = os.getenv('MINDILY_MODEL_PATH', 'GGARA02/kcelectra-korean-emotion')
 REVISION = '2eaf89d8d2cbfd902b93e5ec989db2ec103806fb'
@@ -87,7 +88,14 @@ class Feedback(BaseModel):
 @app.get('/api/health')
 def health():
     return {'status': 'ready', 'model': MODEL,
-            'revision': REVISION if not Path(MODEL).exists() else 'local-fine-tuned'}
+            'revision': REVISION if not Path(MODEL).exists() else 'local-fine-tuned',
+            'generation': llm.status()}
+
+
+@app.get('/api/llm/status')
+def llm_status():
+    """생성형 경로의 활성 여부와 접지 정책을 공개한다. API 키는 노출하지 않는다."""
+    return llm.status()
 
 
 @app.post('/api/emotions/analyze')

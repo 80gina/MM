@@ -1,63 +1,207 @@
-# Mindily MVP
+# Mindily 🌿
 
-AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹 프로토타입입니다.
+> **감정을 기록에서 끝내지 않는 AI 감정 코치**
+> 코디세이 AI 네이티브 Final Project · 팀 3인
 
-## 지금 가능한 흐름
+| | |
+|---|---|
+| 🌐 **서비스 열기** | **https://yellowmug-mindily.hf.space** |
+| 📄 **결과보고서** | [docs/결과보고서.md](docs/결과보고서.md) |
+| 📊 **발표자료** | [docs/presentation.pdf](docs/presentation.pdf) |
+| 🎬 **시연 영상** | (YouTube 링크 기입) |
 
-1. 홈에서 오늘의 일기 작성
-2. 감정 태그와 스트레스 정도 선택
-3. 실제 KcELECTRA 모델의 6개 감정 분류 점수 확인
-4. 무드 미터에서 세부 감정을 사용자가 직접 수정
-5. 도구 호출형 코치의 감정 분석·출처 표시 힐링 추천, 꽃·나무·필사·음악·취미 확장 카드, 1분 호흡, 규칙 기반 대화와 감정 정리
-6. 브라우저 일기 기록과 사용 후 1~5점 만족도 저장
-7. 동의한 선호 활동 한 종류 기억·삭제. 30일 뒤에는 이전 선호를 추천에 사용하지 않음
+---
 
-## 중요한 구분
+## 무엇을 만들었나
 
-- 감정 분석은 실제 GGARA02/kcelectra-korean-emotion 모델을 실행합니다. `/api/agent/coach`가 일기 또는 대화 의도를 구분해 `analyze_emotion`과 `recommend_healing`을 순서대로 호출합니다.
-- 모델 버전: 2eaf89d8d2cbfd902b93e5ec989db2ec103806fb. 출처·이용 조건은 https://huggingface.co/GGARA02/kcelectra-korean-emotion 을 확인합니다. `team_motion` 데이터로 소규모 추가 학습을 시험했으나 성능이 낮아 앱의 기본 모델은 공개 모델입니다.
-- 코치 문장은 규칙 기반 템플릿이며 자유 생성형 LLM 대화가 아닙니다. `/api/rag/search`와 `/api/rag/answer`가 출처 카드를 검색하고 근거를 붙인 결정론적 답변을 제공합니다. 외부 LLM 키가 없으므로 생성형 답변은 의도적으로 비활성화했으며, 그래프·패턴은 예시이고 미션은 짧은 시연입니다. 외부 HTTPS는 임시 Quick Tunnel로 검증했으며 상시 배포와 실제 5명 테스트는 미완료입니다.
-- 만족도와 선호 기억은 서버 SQLite에, 일기 원문과 감정 기록은 브라우저 localStorage에 저장됩니다. 서버 저장에는 영속 디스크가 필요합니다.
-- 공개 KcELECTRA 모델 연결 지점과 데이터 계약은 `docs/BEGINNER_ROADMAP.md`에 정리했습니다.
-- 의료 진단이나 치료를 제공하지 않습니다.
+일기를 쓰면 **실제 한국어 감정 분류 모델**이 감정을 읽고, **생성형 AI가 검색된 출처 안에서만** 코치 문장을 만들어, 근거가 있는 회복 활동까지 연결합니다.
 
-## 로컬 실행
+```
+일기 작성 → 감정 분석(KcELECTRA) → 무드 미터에서 직접 수정
+        → 출처 접지 코치 문장(생성형 AI) + 활동 추천
+        → 만족도 → (동의 시) 30일 선호 기억
+```
 
-[초보자용 실행 안내](docs/RUN.md)를 따라 Python 서버를 실행하고 브라우저로 접속합니다. 설치 후 START.cmd로 실행할 수 있습니다. 일반 사용자는 이후 배포 URL만 열도록 구성합니다. 정적 파일만 열면 모델 API는 동작하지 않습니다.
+### 설계의 핵심은 **역할 분리**입니다
 
-## 제출 문서와 실제 확인 결과
-- [기능명세서](docs/기능명세서.md)
-- [체크리스트](docs/체크리스트.md)
-- [미션 수행 체크리스트](docs/미션수행체크리스트.md)
+| | 맡은 AI | 이유 |
+|---|---|---|
+| 감정 **판정** | 전용 분류 모델 (KcELECTRA) | 점수와 모델 버전을 공개할 수 있어 **검증 가능** |
+| 감정 **표현** | 생성형 AI (코디세이 제공 API) | 공감 문장의 자연스러움. 단 **출처 밖으로 나가지 못하게** 제한 |
+
+---
+
+## 필수 기술 요소 — 요구 2개, 구현 4개
+
+| 요소 | 구현 | 검증 |
+|---|---|---|
+| **AI Agent** | `coach_agent.py` — 의도 판별 후 도구 순차 호출 | [`agent-check.json`](evidence/agent-check.json) |
+| **RAG** | `rag.py` · `healing_knowledge.py` — 근거 검색·출처 부착 | [`rag-check.json`](evidence/rag-check.json) |
+| **생성형 AI** | `llm.py` — 출처 접지 생성, 안전 필터, 자동 폴백 | [`llm-check.json`](evidence/llm-check.json) |
+| **Long-term Memory** | `memory_db.py` — 동의 저장, 30일 만료·삭제 | [`memory-retention-check.json`](evidence/memory-retention-check.json) |
+
+---
+
+## 모델 적용 결과 (실측)
+
+| 입력 | 최상위 감정 | 점수 | 청크 |
+|---|---|---|---|
+| `내일 발표를 잘할 수 있을지 걱정돼요.` | **불안** | **0.941** | 1 |
+| 긴 글 (128토큰 초과) | 불안 | 0.437 | **2** |
+
+`team_motion` 84만 건으로 추가 학습을 시험했으나 테스트 정확도 **0.26**(무작위 기대값 0.20)에 그쳐 **채택하지 않고 공개 모델을 유지**했습니다. 판단 근거와 전체 수치는 [모델 적용 결과](docs/모델적용결과.md)에 있습니다.
+
+---
+
+## 시스템 아키텍처
+
+![시스템 아키텍처](docs/architecture.svg)
+
+설계 근거는 [아키텍처 문서](docs/architecture.md)에 정리했습니다.
+
+---
+
+## 생성형 AI를 안전하게 쓰는 방법
+
+생성형 AI가 자유롭게 답하면 없는 활동이나 의료적 조언을 만들어냅니다. **세 겹으로** 막았습니다.
+
+| 층 | 방법 |
+|---|---|
+| 입력 | 검색된 출처 카드 3장만 전달. **일기 원문은 보내지 않음** |
+| 지시 | 카드 밖 활동 생성 금지 · 진단/처방/병원 권유 금지 · 감정 단정 금지 |
+| 출력 | 금지어 검출 시 문장을 폐기하고 규칙 기반으로 폴백 |
+
+모든 응답은 어느 경로로 만들어졌는지 스스로 밝힙니다.
+
+| `generation` | 의미 |
+|---|---|
+| `llm_grounded` | 생성형 AI가 출처 안에서 작성 |
+| `deterministic_fallback` | 규칙 기반 문장 (사유: `not_configured` / `call_failed` / `safety_filter`) |
+
+확인: `GET /api/llm/status`
+
+---
+
+## 개인정보 처리
+
+| 데이터 | 저장 위치 | 보존 | 동의 | 외부 전송 |
+|---|---|---|---|---|
+| 일기 원문 | 브라우저 localStorage | 사용자 삭제 시까지 | 불필요 | **없음 (LLM에도 미전송)** |
+| 선호 활동 | 서버 SQLite | 30일 자동 삭제 | **필수** | 없음 |
+| 만족도·의견 | 서버 SQLite (익명) | 과제 종료 시 파기 | **필수** | 없음 |
+
+- AI가 생성·추천한 콘텐츠임을 화면에 표시합니다.
+- 동의를 거부해도 핵심 기능을 그대로 사용할 수 있습니다.
+- 의료적 진단이나 치료를 제공하지 않습니다.
+
+---
+
+## 팀원 및 역할
+
+| 이름 | 역할 | 담당 | 대표 커밋 |
+|---|---|---|---|
+| (이름) | 기획 / UX | 콘셉트, 모바일 UI, 접근성, 사용자 테스트 설계 | (링크) |
+| (이름) | 개발 | 모델 연동, FastAPI, Agent·RAG·생성형 AI·Memory, 배포 | (링크) |
+| (이름) | 검증 / 문서 | 기능명세, 테스트, 사용자 5명 피드백 수집·정리 | (링크) |
+
+---
+
+## 기술 스택
+
+| 영역 | 선택 |
+|---|---|
+| 감정 분류 | KcELECTRA (`GGARA02/kcelectra-korean-emotion`, 리비전 `2eaf89d8` 고정) |
+| 생성형 AI | 코디세이 제공 API (OpenAI 호환) |
+| 백엔드 | FastAPI · Uvicorn · PyTorch (CPU) |
+| 프론트엔드 | HTML · CSS · JavaScript (빌드 체인 없음) |
+| 저장 | 브라우저 localStorage + SQLite |
+| 배포 | Docker → Hugging Face Spaces (`yellowmug/mindily`) |
+
+선정 이유는 [기획서 5장](docs/기획서.md)에 정리했습니다.
+
+---
+
+## 실행 방법
+
+### 로컬 실행
+```bash
+git clone https://github.com/80gina/MM.git
+cd MM
+pip install -r requirements.txt
+export CODYSSEY_API_KEY=...                       # 생략 시 규칙 기반 문장으로 동작
+export CODYSSEY_API_BASE=https://.../v1           # 코디세이에서 받은 엔드포인트
+export CODYSSEY_MODEL=gpt-4o-mini                 # 코디세이에서 지정한 모델명
+python -m uvicorn server:app --host 127.0.0.1 --port 8010
+# http://127.0.0.1:8010
+```
+
+### Hugging Face Space 배포
+```bash
+./deploy_space.sh yellowmug
+```
+Space Settings → *Variables and secrets* 에 `CODYSSEY_API_KEY`(Secret), `CODYSSEY_API_BASE`, `CODYSSEY_MODEL`을 등록합니다.
+자세한 절차는 [배포 가이드](docs/DEPLOY_HF.md)를 참고하세요.
+
+### 상태 확인
+```bash
+curl https://yellowmug-mindily.hf.space/api/health
+curl https://yellowmug-mindily.hf.space/api/llm/status
+```
+
+---
+
+## 사용자 테스트 결과
+
+| 항목 | 결과 |
+|---|---|
+| 참여자 | (n)명 |
+| 분석 이해도 / 공감도 / 추천 유용성 / 접근성 | (평균) |
+| 피드백으로 수정한 항목 | (건수) |
+
+개선 전후 비교는 [피드백 기록](docs/피드백기록.md)에 있습니다.
+
+---
+
+<details>
+<summary><b>📁 전체 문서 목록</b></summary>
+
+### 제출 문서
+- [기획서](docs/기획서.md) — 문제 정의·타겟·AI 활용·기술 접근·일정
+- [결과보고서](docs/결과보고서.md) — 평가 항목별 구현 결과
+- [기능명세서](docs/기능명세서.md) — 기능·비기능 요구사항
+- [시스템 아키텍처](docs/architecture.md) — 계층 구조와 설계 근거
+- [발표자료 구성안](docs/발표자료구성안.md) · [시연계획서](docs/시연계획서.md)
 - [팀 역할 및 기여 기록](docs/TEAM_ROLES.md)
+
+### 기록·분석
+- [모델 적용 결과](docs/모델적용결과.md) — 실제 분류 결과·추가 학습 측정값·채택 판단
+- [모델학습보고서](docs/모델학습보고서.md) — 전처리·토큰화·학습 설정 상세
+- [기술 통합 보고서](docs/INTEGRATION_REPORT.md) · [시연보고서](docs/시연보고서.md)
 - [프로그램 비평 및 향후 방향](docs/프로그램비평.md)
-- [모델 학습 과정 및 결과](docs/모델학습보고서.md)
-- [결과보고서](docs/결과보고서.md)
-- [기술 통합 보고서](docs/INTEGRATION_REPORT.md)
-- [시연보고서](docs/시연보고서.md)
-- [시연계획서](docs/시연계획서.md)
-- [제출증빙자료](docs/제출증빙자료.md)
-- [피드백 기록](docs/피드백기록.md)
-- [실제 사용자 5명 테스트 진행 안내](docs/사용자테스트진행안내.md)
-- [Docker 포함 파일 검사](test_packaging.py)
-- [로컬 데이터 확인](docs/DATA_REFERENCE.md)
-- [실제 API 검증 결과](evidence/api-check.json)
-- [Agent 도구 호출 검증](evidence/agent-check.json)
-- [RAG 근거 연결 검증](evidence/rag-check.json)
-- [현재 소스 기준 로컬 서버 검증](evidence/local-current-check.json)
-- [확장 추천 카드 검증](evidence/extension-recommendations-check.json)
-- [로컬 데이터 전수 통계](evidence/training-data-audit.json)
-- [파일럿 추가 학습 결과](evidence/team-motion-training.json)
-- [임시 HTTPS 접속·설문 자체 점검](evidence/quick-tunnel-smoke.json)
+- [미션수행체크리스트](docs/미션수행체크리스트.md) · [제출증빙자료](docs/제출증빙자료.md)
 
-Dockerfile과 [Render 배포 설정](render.yaml)을 준비했습니다. 유료 웹 서비스·영속 디스크가 필요한 이유와 [초보자용 Render 배포 순서](docs/RUN.md#render로-외부-배포하기)를 확인하세요. 상시 호스팅과 실제 사용자 피드백 수집은 아직 완료되지 않았습니다.
+### 검증 증거
+- [API](evidence/api-check.json) · [Agent](evidence/agent-check.json) · [RAG](evidence/rag-check.json) · [생성형 AI](evidence/llm-check.json)
+- [선호 기억 유지·만료](evidence/memory-retention-check.json) · [확장 추천 카드](evidence/extension-recommendations-check.json)
+- [학습 데이터 전수 통계](evidence/training-data-audit.json) · [파일럿 추가 학습](evidence/team-motion-training.json)
 
-비용 없이 과제 시연·5명 테스트를 진행할 때는 [Cloudflare Quick Tunnel 실행 안내](docs/QUICK_TUNNEL.md)를 사용합니다. 2026-09-19 임시 HTTPS 경로에서 첫 화면과 실제 모델 분석을 확인했습니다. PC와 서버를 켜 두어야 하며 상시 서비스 배포는 아닙니다.
+### 운영 안내
+- [배포 가이드](docs/DEPLOY_HF.md) · [실행 가이드](docs/RUN.md)
+- [초보자용 로드맵](docs/BEGINNER_ROADMAP.md) · [데이터 참조](docs/DATA_REFERENCE.md)
+- [사용자 테스트 진행 안내](docs/사용자테스트진행안내.md) · [테스트 기록지](docs/사용자테스트기록지.md)
 
-만족도 응답은 `python feedback_summary.py`로 개인 의견을 출력하지 않고 집계할 수 있습니다. 응답 5건은 서로 다른 사용자 5명을 증명하지 않으므로 별도 동의·테스트 기록이 필요합니다.
+</details>
 
-## 폴더
+---
 
-- `dist/`: 배포 가능한 정적 앱
-- `docs/BEGINNER_ROADMAP.md`: 초보자용 팀 개발 순서, 역할, 모델 연동 계약
+## 현재 한계
 
+- 생성형 응답이 감정 라벨·출처 카드만 참조하므로 개별 상황 묘사의 구체성은 낮습니다.
+- 무료 Space는 영구 디스크가 없어 재시작 시 피드백·선호 데이터가 초기화됩니다.
+- 위치 기반 추천(러닝 코스·근처 장소)은 권한·지도 API 검토 후 2단계입니다.
+
+## 출처
+
+- 감정 분류 모델: [GGARA02/kcelectra-korean-emotion](https://huggingface.co/GGARA02/kcelectra-korean-emotion)
+- 활동 카드 출처: NHS · WHO · RHS · Project Gutenberg (각 카드에 링크 표시)
+- 필사·음악 콘텐츠는 저작권 만료 또는 공개 라이선스 자료만 사용합니다.

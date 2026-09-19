@@ -8,7 +8,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 2. 감정 태그와 스트레스 정도 선택
 3. 실제 KcELECTRA 모델의 6개 감정 분류 점수 확인
 4. 무드 미터에서 세부 감정을 사용자가 직접 수정
-5. 도구 호출형 코치의 감정 분석·출처 표시 힐링 추천과 1분 호흡, 규칙 기반 대화
+5. 도구 호출형 코치의 감정 분석·출처 표시 힐링 추천, 1분 호흡, 규칙 기반 대화와 감정 정리
 6. 브라우저 일기 기록과 사용 후 1~5점 만족도 저장
 7. 동의한 선호 활동 한 종류 기억·삭제. 30일 뒤에는 이전 선호를 추천에 사용하지 않음
 
@@ -39,6 +39,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [제출증빙자료](docs/제출증빙자료.md)
 - [피드백 기록](docs/피드백기록.md)
 - [실제 사용자 5명 테스트 진행 안내](docs/사용자테스트진행안내.md)
+- [Docker 포함 파일 검사](test_packaging.py)
 - [로컬 데이터 확인](docs/DATA_REFERENCE.md)
 - [실제 API 검증 결과](evidence/api-check.json)
 - [Agent 도구 호출 검증](evidence/agent-check.json)
@@ -46,7 +47,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [파일럿 추가 학습 결과](evidence/team-motion-training.json)
 - [임시 HTTPS 접속·설문 자체 점검](evidence/quick-tunnel-smoke.json)
 
-Dockerfile과 [Render 배포 설정](render.yaml)을 준비했습니다. 유료 웹 서비스·영속 디스크가 필요한 이유와 [초보자용 Render 배포 순서](docs/RUN.md#render로-외부-배포하기)를 확인하세요. 실제 배포·사용자 피드백 수집은 아직 완료되지 않았습니다.
+Dockerfile과 [Render 배포 설정](render.yaml)을 준비했습니다. 유료 웹 서비스·영속 디스크가 필요한 이유와 [초보자용 Render 배포 순서](docs/RUN.md#render로-외부-배포하기)를 확인하세요. 상시 호스팅과 실제 사용자 피드백 수집은 아직 완료되지 않았습니다.
 
 비용 없이 과제 시연·5명 테스트를 진행할 때는 [Cloudflare Quick Tunnel 실행 안내](docs/QUICK_TUNNEL.md)를 사용합니다. 2026-09-19 임시 HTTPS 경로에서 첫 화면과 실제 모델 분석을 확인했습니다. PC와 서버를 켜 두어야 하며 상시 서비스 배포는 아닙니다.
 

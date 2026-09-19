@@ -166,6 +166,40 @@ async function loadHealingRecommendations() {
   }
 }
 
+const organizerKey = 'mindily-thoughts';
+const organizerFields = ['event', 'feeling', 'need'];
+function hydrateOrganizer() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(organizerKey) || 'null');
+    if (!saved) return;
+    organizerFields.forEach((name) => { document.getElementById(`organize-${name}`).value = saved[name] || ''; });
+    document.getElementById('organize-status').textContent = '이 브라우저에 저장된 내용을 다시 볼 수 있어요.';
+  } catch (_) {}
+}
+
+document.getElementById('organize-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const values = Object.fromEntries(organizerFields.map((name) =>
+    [name, document.getElementById(`organize-${name}`).value.trim()]));
+  if (!Object.values(values).some(Boolean)) return toast('한 칸 이상 적어주세요.');
+  try {
+    localStorage.setItem(organizerKey, JSON.stringify({...values, saved_at: new Date().toISOString()}));
+    document.getElementById('organize-status').textContent = '이 브라우저에 저장했어요.';
+    document.getElementById('organize-dialog').close();
+    toast('마음을 정리한 내용을 이 브라우저에 저장했어요.');
+  } catch (_) { toast('이 브라우저에 저장할 수 없어요. 저장 설정을 확인해주세요.'); }
+});
+
+document.getElementById('delete-organized-thoughts').addEventListener('click', () => {
+  if (!window.confirm('이 브라우저에 저장한 감정 정리 내용을 삭제할까요? 복구할 수 없어요.')) return;
+  try {
+    localStorage.removeItem(organizerKey);
+    document.getElementById('organize-form').reset();
+    document.getElementById('organize-status').textContent = '저장된 정리 내용이 없어요.';
+    toast('정리 내용을 삭제했어요.');
+  } catch (_) { toast('정리 내용을 삭제하지 못했어요.'); }
+});
+
 document.getElementById('save-memory').addEventListener('click', async () => {
   if (!document.getElementById('memory-consent').checked) return toast('기억 저장 동의를 먼저 확인해주세요.');
   const token = memoryToken || [...crypto.getRandomValues(new Uint8Array(32))].map(x => x.toString(16).padStart(2, '0')).join('');
@@ -335,9 +369,10 @@ function hydrateLatest() {
 }
 
 document.getElementById('delete-records').addEventListener('click', () => {
-  if (!window.confirm('이 브라우저에 저장된 일기 원문과 감정 기록을 모두 삭제할까요? 복구할 수 없어요.')) return;
+  if (!window.confirm('이 브라우저에 저장된 일기·감정 기록·정리 내용을 모두 삭제할까요? 복구할 수 없어요.')) return;
   try {
     localStorage.removeItem('mindily-records');
+    localStorage.removeItem(organizerKey);
     window.location.reload();
   } catch (_) { toast('이 브라우저의 기록을 삭제할 수 없어요. 저장 설정을 확인해주세요.'); }
 });
@@ -353,4 +388,5 @@ function toast(message) {
 
 renderChart();
 hydrateLatest();
+hydrateOrganizer();
 showScreen('home', false);

@@ -1,0 +1,12 @@
+{
+  "checked_on": "2026-09-19",
+  "environment": "temporary Cloudflare Quick Tunnel in in-app browser",
+  "synthetic_input": true,
+  "checks": [
+    "Emotion organizer card opened a three-question dialog",
+    "Submitting synthetic text closed the dialog with a saved confirmation",
+    "After page reload the same text and saved status appeared",
+    "The organizer submit handler writes to localStorage and has no fetch call"
+  ],
+  "limits": ["Not a real user test", "Saved sample remains in this test browser until deleted"]
+}

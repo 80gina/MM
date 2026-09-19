@@ -155,6 +155,11 @@
             <div class="rec-icon lilac" aria-hidden="true">☁</div><div><h3>마음 털어놓기</h3><p>조금 더 이야기하고 싶다면, 서두르지 않고 들어드릴게요.</p></div><button class="secondary-button pale-lilac" type="button" data-go="chat">이야기하기</button>
           </article>
         </div>
+        <article class="card recommendation organizer-card">
+          <div class="rec-icon blue" aria-hidden="true">✎</div>
+          <div><span class="soft-chip">스스로 정리하기</span><h3>감정 정리하기</h3><p>있었던 일과 지금 필요한 것을 세 문장으로 적어봐요.</p></div>
+          <button class="secondary-button" type="button" data-open-dialog="organize-dialog">시작하기</button>
+        </article>
         <div class="card memory-card">
           <h3>다음 휴식에 기억할까요?</h3>
           <p>동의하면 선호하는 활동 종류만 서버에 기억해 추천 순서를 조정해요. 30일이 지나면 기억을 사용하지 않아요. 일기 원문과 위치는 저장하지 않아요.</p>
@@ -222,6 +227,20 @@
     <div class="breath-content"><button class="icon-button close-breath" type="button" aria-label="호흡 닫기">×</button><span class="eyebrow">1분 호흡</span><div class="breath-orb"><span id="breath-label">들이쉬어요</span></div><p>어깨의 힘을 풀고, 천천히 숨의 움직임을 느껴보세요.</p><strong id="breath-time">01:00</strong></div>
   </dialog>
 
+  <dialog id="organize-dialog" class="sheet-dialog">
+    <form class="sheet-content" id="organize-form">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="section-heading"><div><span class="eyebrow">감정 정리하기</span><h2>지금 마음을 천천히 정리해요.</h2></div><button class="icon-button" type="button" data-close-dialog="organize-dialog" aria-label="닫기">×</button></div>
+      <p>정리한 내용은 이 브라우저에만 저장됩니다. 분석 서버로 보내지 않아요.</p>
+      <label class="journal-field"><span>무슨 일이 있었나요?</span><textarea id="organize-event" maxlength="500" placeholder="기억나는 장면 한 가지만 적어도 좋아요."></textarea></label>
+      <label class="journal-field"><span>어떤 마음이 들었나요?</span><textarea id="organize-feeling" maxlength="500" placeholder="정확한 단어를 몰라도 괜찮아요."></textarea></label>
+      <label class="journal-field"><span>지금 무엇이 필요할까요?</span><textarea id="organize-need" maxlength="500" placeholder="쉼, 도움, 시간처럼 작은 것부터요."></textarea></label>
+      <p id="organize-status" role="status">저장된 정리 내용이 없어요.</p>
+      <button class="primary-button" type="submit">이 브라우저에 저장하기</button>
+      <button class="text-button" type="button" id="delete-organized-thoughts">정리 내용 삭제</button>
+    </form>
+  </dialog>
+
   <dialog id="safety-dialog" class="info-dialog">
     <form method="dialog"><button class="icon-button" value="cancel" aria-label="닫기">×</button><span class="eyebrow">안전한 사용 안내</span><h2>Mindily는 마음을 정리하는 도구예요.</h2><p>감정 분석은 의료적 진단이 아니며, 중요한 판단을 대신하지 않아요. 스스로 또는 타인을 해칠 위험이 있거나 즉각적인 도움이 필요하면 지역 응급기관과 전문 상담기관에 연락해주세요.</p><button class="secondary-button" value="ok">확인했어요</button></form>
   </dialog>
@@ -241,6 +260,6 @@
   </dialog>
 
   <div class="toast" role="status" aria-live="polite" id="toast"></div>
-  <script src="app.js?v=coach-20260919"></script>
+  <script src="app.js?v=organizer-20260919"></script>
 </body>
 </html>

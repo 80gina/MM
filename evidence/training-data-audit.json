@@ -1,0 +1,59 @@
+{
+  "data_dir_name": "team_motion",
+  "json_files": 2335,
+  "valid_conversation_files": 2333,
+  "utterances": 847156,
+  "empty_text": 0,
+  "invalid_json": 0,
+  "field_counts": {
+    "VerifyEmotionCategory": {
+      "긍정": 586281,
+      "중립": 162135,
+      "부정": 98740
+    },
+    "SpeakerEmotionCategory": {
+      "긍정": 586866,
+      "중립": 161611,
+      "부정": 98679
+    },
+    "VerifyEmotionObject": {
+      "1": 419481,
+      "0": 274743,
+      "2": 152932
+    },
+    "SpeakerEmotionObject": {
+      "1": 420041,
+      "0": 274171,
+      "2": 152944
+    },
+    "VerifyEmotionLevel": {
+      "보통": 669381,
+      "약함": 154488,
+      "강함": 23287
+    },
+    "SpeakerEmotionLevel": {
+      "보통": 669662,
+      "약함": 154292,
+      "강함": 23202
+    },
+    "VerifyEmotionTarget": {
+      "기쁨": 424411,
+      "없음": 206219,
+      "놀라움": 84761,
+      "화남": 43163,
+      "사랑스러움": 34624,
+      "슬픔": 34052,
+      "두려움": 19926
+    },
+    "SpeakerEmotionTarget": {
+      "기쁨": 425058,
+      "없음": 205557,
+      "놀라움": 84792,
+      "화남": 43232,
+      "사랑스러움": 34596,
+      "슬픔": 34064,
+      "두려움": 19857
+    }
+  },
+  "privacy": "대화 원문과 화자 개인정보를 출력하지 않은 집계 결과"
+}

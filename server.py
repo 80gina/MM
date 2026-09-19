@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from uuid import uuid4
 
-MODEL = 'GGARA02/kcelectra-korean-emotion'
+MODEL = os.getenv('MINDILY_MODEL_PATH', 'GGARA02/kcelectra-korean-emotion')
 REVISION = '2eaf89d8d2cbfd902b93e5ec989db2ec103806fb'
 inference_lock = Lock()
 feedback_store = []
@@ -24,9 +24,13 @@ feedback_store = []
 @asynccontextmanager
 async def lifespan(app):
     offline = os.getenv('MINDILY_OFFLINE') == '1'
-    app.state.tokenizer = AutoTokenizer.from_pretrained(MODEL, revision=REVISION, local_files_only=offline)
+    model_source = Path(MODEL)
+    load_args = {'local_files_only': offline}
+    if not model_source.exists():
+        load_args['revision'] = REVISION
+    app.state.tokenizer = AutoTokenizer.from_pretrained(MODEL, **load_args)
     app.state.model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL, revision=REVISION, local_files_only=offline, use_safetensors=True
+        MODEL, **load_args, use_safetensors=True
     ).eval()
     yield
 
@@ -62,7 +66,8 @@ class Feedback(BaseModel):
 
 @app.get('/api/health')
 def health():
-    return {'status': 'ready', 'model': MODEL, 'revision': REVISION}
+    return {'status': 'ready', 'model': MODEL,
+            'revision': REVISION if not Path(MODEL).exists() else 'local-fine-tuned'}
 
 
 @app.post('/api/emotions/analyze')
@@ -81,7 +86,7 @@ def analyze(diary: Diary):
         scores = (chunk_scores * weights[:, None]).sum(0) / weights.sum()
         labels = sorted([{'name': app.state.model.config.id2label[i], 'score': float(s)}
                          for i, s in enumerate(scores)], key=lambda x: x['score'], reverse=True)
-        return {'model': MODEL, 'revision': REVISION, 'labels': labels,
+        return {'model': MODEL, 'revision': REVISION if not Path(MODEL).exists() else 'local-fine-tuned', 'labels': labels,
                 'self_reported_stress': diary.self_reported_stress,
                 'chunks': len(chunk_scores), 'aggregation': 'token_weighted_mean',
                 'disclaimer': '분류 점수는 실제 감정 비율이 아니에요. 최종 마음은 직접 선택해주세요.'}

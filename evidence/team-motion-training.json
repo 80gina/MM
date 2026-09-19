@@ -1,0 +1,115 @@
+{
+  "base_model": "GGARA02/kcelectra-korean-emotion",
+  "revision": "2eaf89d8d2cbfd902b93e5ec989db2ec103806fb",
+  "device": "cpu",
+  "mapping": {
+    "화남": "분노",
+    "기쁨": "기쁨",
+    "두려움": "불안",
+    "놀라움": "당황",
+    "슬픔": "슬픔"
+  },
+  "warning": "사랑스러움·없음은 제외했고 상처 라벨의 신규 표본은 없어 별도 보존성 평가가 필요함",
+  "split_method": "JSON 파일 경로 SHA-1 기반 80/10/10 그룹 분리",
+  "selected_samples": {
+    "train": 100,
+    "validation": 100,
+    "test": 100
+  },
+  "available_mapped_samples": {
+    "train:기쁨": 330711,
+    "validation:기쁨": 45742,
+    "train:불안": 16233,
+    "train:당황": 71051,
+    "train:슬픔": 25842,
+    "train:분노": 34904,
+    "test:슬픔": 3545,
+    "test:분노": 5508,
+    "test:기쁨": 47958,
+    "test:불안": 1580,
+    "test:당황": 6311,
+    "validation:분노": 2751,
+    "validation:슬픔": 4665,
+    "validation:불안": 2113,
+    "validation:당황": 7399
+  },
+  "excluded": {
+    "unmapped:없음": 206219,
+    "unmapped:사랑스러움": 34624
+  },
+  "epochs": 1,
+  "batch_size": 4,
+  "max_length": 128,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.1418968868255615,
+      "validation": {
+        "loss": 1.9917309284210205,
+        "accuracy": 0.24,
+        "macro_f1_5_mapped_classes": 0.23948884321911584,
+        "per_class": {
+          "분노": {
+            "precision": 0.17647058823529413,
+            "recall": 0.3,
+            "f1": 0.22222222222222224
+          },
+          "기쁨": {
+            "precision": 0.4117647058823529,
+            "recall": 0.35,
+            "f1": 0.37837837837837834
+          },
+          "불안": {
+            "precision": 0.23809523809523808,
+            "recall": 0.25,
+            "f1": 0.24390243902439024
+          },
+          "당황": {
+            "precision": 0.2857142857142857,
+            "recall": 0.2,
+            "f1": 0.23529411764705882
+          },
+          "슬픔": {
+            "precision": 0.14285714285714285,
+            "recall": 0.1,
+            "f1": 0.11764705882352941
+          }
+        },
+        "samples": 100
+      }
+    }
+  ],
+  "test": {
+    "loss": 1.8621671247482299,
+    "accuracy": 0.26,
+    "macro_f1_5_mapped_classes": 0.24956148127941077,
+    "per_class": {
+      "분노": {
+        "precision": 0.2857142857142857,
+        "recall": 0.5,
+        "f1": 0.36363636363636365
+      },
+      "기쁨": {
+        "precision": 0.2,
+        "recall": 0.2,
+        "f1": 0.20000000000000004
+      },
+      "불안": {
+        "precision": 0.21739130434782608,
+        "recall": 0.25,
+        "f1": 0.23255813953488372
+      },
+      "당황": {
+        "precision": 0.36363636363636365,
+        "recall": 0.2,
+        "f1": 0.25806451612903225
+      },
+      "슬픔": {
+        "precision": 0.2727272727272727,
+        "recall": 0.15,
+        "f1": 0.19354838709677416
+      }
+    },
+    "samples": 100
+  }
+}

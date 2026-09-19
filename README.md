@@ -38,6 +38,8 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [피드백 기록](docs/피드백기록.md)
 - [로컬 데이터 확인](docs/DATA_REFERENCE.md)
 - [실제 API 검증 결과](evidence/api-check.json)
+- [로컬 데이터 전수 통계](evidence/training-data-audit.json)
+- [파일럿 추가 학습 결과](evidence/team-motion-training.json)
 
 Dockerfile은 배포 설정 초안입니다. 실제 배포·사용자 피드백 수집은 후속 단계입니다. 최종 서비스 범위를 축소하지 않고 순서대로 완성합니다.
 

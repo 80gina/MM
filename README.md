@@ -44,6 +44,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [실제 API 검증 결과](evidence/api-check.json)
 - [Agent 도구 호출 검증](evidence/agent-check.json)
 - [RAG 근거 연결 검증](evidence/rag-check.json)
+- [현재 소스 기준 로컬 서버 검증](evidence/local-current-check.json)
 - [확장 추천 카드 검증](evidence/extension-recommendations-check.json)
 - [로컬 데이터 전수 통계](evidence/training-data-audit.json)
 - [파일럿 추가 학습 결과](evidence/team-motion-training.json)

@@ -1,0 +1,20 @@
+{
+  "checked_on": "2026-09-19",
+  "base_url": "http://127.0.0.1:8011",
+  "scope": "fresh local server process using current source tree; synthetic requests only",
+  "health": {
+    "status": 200,
+    "model": "GGARA02/kcelectra-korean-emotion",
+    "revision": "2eaf89d8d2cbfd902b93e5ec989db2ec103806fb"
+  },
+  "rag_answer": {
+    "status": 200,
+    "generation": "deterministic_fallback",
+    "source_count": 3
+  },
+  "agent": {
+    "status": 200,
+    "tool_trace": ["analyze_emotion", "recommend_healing", "retrieve_grounding"]
+  },
+  "limits": ["No real user test", "No public browser check in this run"]
+}

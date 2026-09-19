@@ -27,7 +27,7 @@ AutoModelForSequenceClassification.from_pretrained(m, revision=r, use_safetensor
 
 COPY --chown=user server.py coach_agent.py rag.py llm.py \
      feedback_db.py healing_knowledge.py memory_db.py ./
-COPY --chown=user dist ./dist
+COPY --chown=user index.html app.js styles.css ./dist/
 
 # SQLite 저장 경로. Space 재시작 시 초기화되므로 수집 즉시 집계를 내려받는다.
 ENV MINDILY_FEEDBACK_DB=/home/user/app/data/feedback.sqlite3 \

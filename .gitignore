@@ -12,4 +12,5 @@ data/
 .local-tools/
 
 _space_upload/
-GitHub올리기.cmd
+push_to_github.cmd
+_space_upload2/

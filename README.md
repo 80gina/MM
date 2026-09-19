@@ -43,7 +43,7 @@ AI 감정 일기와 맞춤형 힐링 코치를 시연하는 모바일 우선 웹
 - [로컬 데이터 전수 통계](evidence/training-data-audit.json)
 - [파일럿 추가 학습 결과](evidence/team-motion-training.json)
 
-Dockerfile은 배포 설정 초안입니다. 실제 배포·사용자 피드백 수집은 후속 단계입니다. 최종 서비스 범위를 축소하지 않고 순서대로 완성합니다.
+Dockerfile과 [Render 배포 설정](render.yaml)을 준비했습니다. 유료 웹 서비스·영속 디스크가 필요한 이유와 [초보자용 Render 배포 순서](docs/RUN.md#render로-외부-배포하기)를 확인하세요. 실제 배포·사용자 피드백 수집은 아직 완료되지 않았습니다.
 
 만족도 응답은 `python feedback_summary.py`로 개인 의견을 출력하지 않고 집계할 수 있습니다. 응답 5건은 서로 다른 사용자 5명을 증명하지 않으므로 별도 동의·테스트 기록이 필요합니다.
 

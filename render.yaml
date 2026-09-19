@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: mindily
+    runtime: docker
+    plan: 1c-2g
+    region: singapore
+    healthCheckPath: /api/health
+    disk:
+      name: mindily-data
+      mountPath: /app/data
+      sizeGB: 2
+    envVars:
+      - key: HF_HOME
+        value: /app/data/hf-cache
+      - key: HF_HUB_DISABLE_TELEMETRY
+        value: "1"

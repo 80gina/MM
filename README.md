@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| 🌐 **서비스 열기** | **https://yellowmug-mindily.hf.space** |
+| 🌐 **서비스 열기** | 임시 HTTPS 주소 (테스트 시 발급) · 상시 주소는 `yellowmug/mindily` 쿼터 해제 후 |
 | 📄 **결과보고서** | [docs/결과보고서.md](docs/결과보고서.md) |
 | 📊 **발표자료** | [docs/presentation.pdf](docs/presentation.pdf) |
 | 🎬 **시연 영상** | (YouTube 링크 기입) |
@@ -199,6 +199,7 @@ curl https://yellowmug-mindily.hf.space/api/llm/status
 - 생성형 응답이 감정 라벨·출처 카드만 참조하므로 개별 상황 묘사의 구체성은 낮습니다.
 - 무료 Space는 영구 디스크가 없어 재시작 시 피드백·선호 데이터가 초기화됩니다.
 - 위치 기반 추천(러닝 코스·근처 장소)은 권한·지도 API 검토 후 2단계입니다.
+- 상시 호스팅은 Hugging Face 측 CPU 쿼터 오류로 대기 중입니다. 시연·사용자 테스트는 임시 HTTPS 경로로 수행했습니다.
 
 ## 출처
 

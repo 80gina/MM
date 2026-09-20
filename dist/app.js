@@ -120,19 +120,51 @@ document.getElementById('diary-form').addEventListener('submit', async (event) =
   } finally { button.disabled = false; button.textContent = 'AI에게 마음 맡기기 ✨'; }
 });
 
+// 6개 감정 분류 점수를 레이더로 그린다.
+// 반지름은 sqrt(점수)에 비례하고 최소 반지름을 두어, 한 감정에 쏠렸을 때도
+// 도형이 한 점으로 무너지지 않게 했다. 정확한 값은 꼭짓점 숫자로 함께 보여준다.
+const RADAR_ORDER = ['기쁨', '당황', '불안', '슬픔', '상처', '분노'];
+function emotionRadar(ranked) {
+  const CX = 150, CY = 132, R = 78, FLOOR = 0.2;
+  const score = Object.fromEntries(ranked.map(x => [x.name, x.score]));
+  const lead = ranked[0].name;
+  const at = (index, ratio) => {
+    const angle = (-90 + index * 60) * Math.PI / 180;
+    const radius = R * (FLOOR + (1 - FLOOR) * ratio);
+    return [CX + radius * Math.cos(angle), CY + radius * Math.sin(angle)];
+  };
+  const ringPoints = (ratio) => RADAR_ORDER
+    .map((_, i) => at(i, ratio).map(n => n.toFixed(1)).join(',')).join(' ');
+  const scaled = RADAR_ORDER.map(name => Math.sqrt(Math.max(score[name] || 0, 0)));
+  const shape = RADAR_ORDER
+    .map((_, i) => at(i, scaled[i]).map(n => n.toFixed(1)).join(',')).join(' ');
+
+  let svg = '<svg class="emo-radar" viewBox="0 0 300 265" role="img" aria-label="6개 감정 분류 점수">';
+  [1, 0.66, 0.33].forEach(r => { svg += `<polygon class="emo-grid" points="${ringPoints(r)}"/>`; });
+  RADAR_ORDER.forEach((_, i) => {
+    const [x, y] = at(i, 1);
+    svg += `<line class="emo-spoke" x1="${CX}" y1="${CY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+  });
+  svg += `<polygon class="emo-shape" points="${shape}"/>`;
+  RADAR_ORDER.forEach((name, i) => {
+    const [x, y] = at(i, scaled[i]);
+    const isLead = name === lead;
+    const value = (score[name] || 0).toFixed(3);
+    svg += `<circle class="emo-dot${isLead ? ' lead' : ''}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isLead ? 5 : 3.5}"/>`;
+    const [lx, ly] = at(i, 1.34);
+    const anchor = lx > CX + 6 ? 'start' : lx < CX - 6 ? 'end' : 'middle';
+    const dy = ly < CY ? -2 : 12;
+    svg += `<text class="emo-label${isLead ? ' lead' : ''}" x="${lx.toFixed(1)}" y="${(ly + dy).toFixed(1)}" text-anchor="${anchor}">${emotionMeta[name][0]} ${name}</text>`;
+    svg += `<text class="emo-score${isLead ? ' lead' : ''}" x="${lx.toFixed(1)}" y="${(ly + dy + 13).toFixed(1)}" text-anchor="${anchor}">${value}</text>`;
+  });
+  svg += '</svg>';
+  const readable = RADAR_ORDER.map(n => `${n} ${(score[n] || 0).toFixed(3)}`).join(', ');
+  return `${svg}<p class="sr-only">${readable}</p>`;
+}
+
 function renderAnalysis() {
   const top = lastAnalysis.ranked.slice(0, 3);
-  // 6개 감정 전부를 막대로 보여준다. 1위만 강조하고 나머지는 맥락으로 남긴다.
-  const rows = lastAnalysis.ranked.map((item, index) => {
-    const percent = Math.max(item.score * 100, 0);
-    return `<li class="emo-row${index === 0 ? ' lead' : ''}">
-      <span class="emo-name"><span aria-hidden="true">${emotionMeta[item.name][0]}</span>${item.name}</span>
-      <span class="emo-track"><span class="emo-fill" style="width:${percent.toFixed(1)}%"></span></span>
-      <span class="emo-val">${item.score.toFixed(3)}</span>
-    </li>`;
-  }).join('');
-  document.getElementById('emotion-result').innerHTML =
-    `<ul class="emo-chart">${rows}</ul>`;
+  document.getElementById('emotion-result').innerHTML = emotionRadar(lastAnalysis.ranked);
   const level = lastAnalysis.stress >= 4 ? '높은' : lastAnalysis.stress === 3 ? '조금 높은' : '낮은';
   document.getElementById('analysis-summary').textContent = `직접 기록한 스트레스 ${lastAnalysis.stress}/5`;
   document.getElementById('analysis-meter').style.width = `${lastAnalysis.stress * 20}%`;

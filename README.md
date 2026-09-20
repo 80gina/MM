@@ -61,7 +61,7 @@
 | 같은 문장 | 불안 | 0.941 | 1 | 로컬 (`evidence/api-check.json`) |
 | 긴 글 (128토큰 초과) | 불안 | 0.437 | **2** | 로컬 |
 
-`team_motion` 84만 건으로 추가 학습을 시험했으나 테스트 정확도 **0.26**(무작위 기대값 0.20)에 그쳐 **채택하지 않고 공개 모델을 유지**했습니다. 판단 근거와 전체 수치는 [모델 적용 결과](docs/모델적용결과.md)에 있습니다.
+로컬 `team_motion` 폴더에는 AI Hub의 [감정이 태깅된 자유대화 (성인)](https://www.aihub.or.kr/aihubdata/data/view.do?aihubDataSe=&currMenu=&dataSetSn=71631&topMenu=)과 [감정이 태깅된 자유대화 (청소년)](https://www.aihub.or.kr/aihubdata/data/view.do?aihubDataSe=data&currMenu=115&dataSetSn=71632&pageIndex=11&srchDetailCnd=DETAILCND001&srchOptnCnd=OPTNCND001&srchOrder=ORDER001&srchPagePer=20&topMenu=100) 자료가 있습니다. 로컬 파일에서 집계한 발화 847,156건 중 학습·검증·테스트 각 100건으로 추가 학습을 시험했으나 테스트 정확도 **0.26**(무작위 기대값 0.20)에 그쳐 **채택하지 않고 공개 모델을 유지**했습니다. 공개 모델의 원 학습 자료는 AI Hub의 별도 데이터셋인 **감성대화말뭉치**입니다. 판단 근거와 전체 수치는 [모델 적용 결과](docs/모델적용결과.md)에 있습니다.
 
 ---
 

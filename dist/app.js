@@ -122,7 +122,17 @@ document.getElementById('diary-form').addEventListener('submit', async (event) =
 
 function renderAnalysis() {
   const top = lastAnalysis.ranked.slice(0, 3);
-  document.getElementById('emotion-result').innerHTML = top.map((item) => `<div class="emotion-pill"><span aria-hidden="true">${emotionMeta[item.name][0]}</span><strong>${item.name}</strong><small>분류 점수 ${item.score.toFixed(3)}</small></div>`).join('');
+  // 6개 감정 전부를 막대로 보여준다. 1위만 강조하고 나머지는 맥락으로 남긴다.
+  const rows = lastAnalysis.ranked.map((item, index) => {
+    const percent = Math.max(item.score * 100, 0);
+    return `<li class="emo-row${index === 0 ? ' lead' : ''}">
+      <span class="emo-name"><span aria-hidden="true">${emotionMeta[item.name][0]}</span>${item.name}</span>
+      <span class="emo-track"><span class="emo-fill" style="width:${percent.toFixed(1)}%"></span></span>
+      <span class="emo-val">${item.score.toFixed(3)}</span>
+    </li>`;
+  }).join('');
+  document.getElementById('emotion-result').innerHTML =
+    `<ul class="emo-chart">${rows}</ul>`;
   const level = lastAnalysis.stress >= 4 ? '높은' : lastAnalysis.stress === 3 ? '조금 높은' : '낮은';
   document.getElementById('analysis-summary').textContent = `직접 기록한 스트레스 ${lastAnalysis.stress}/5`;
   document.getElementById('analysis-meter').style.width = `${lastAnalysis.stress * 20}%`;

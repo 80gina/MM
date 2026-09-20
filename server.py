@@ -98,7 +98,9 @@ class OrganizerDraftRequest(BaseModel):
 
 
 class ReportEventEntry(BaseModel):
+    id: str = Field(min_length=1, max_length=80)
     date: str = Field(min_length=1, max_length=30)
+    emotion: str = Field(default='감정 미기록', max_length=30)
     text: str = Field(min_length=1, max_length=1000)
 
 

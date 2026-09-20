@@ -10,8 +10,11 @@
   "report": {
     "endpoint": "POST /api/report/events",
     "consent_required": true,
-    "maximum_entries": 10,
-    "dated_event_summary_returned": true,
+    "maximum_entries_per_request": 10,
+    "all_entries_in_selected_period_batched": true,
+    "dated_event_emotion_items_returned": true,
+    "missing_generated_items_use_extractive_fallback": true,
+    "editable_popup_save_and_delete": true,
     "local_generation": "extractive_fallback"
   },
   "tests": ["python test_diary_draft.py", "python test_agent.py", "python test_packaging.py", "node --check dist/app.js"],

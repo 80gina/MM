@@ -177,4 +177,15 @@ dialog { border: 0; padding: 0; color: var(--ink); }.sheet-dialog { width: min(4
 .draft-controls .privacy-inline { font-size: 12px; line-height: 1.55; }
 .draft-controls .journal-field textarea { min-height: 120px; }
 #report-draft-status { min-height: 1.4em; }
+.need-examples-title { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+.need-examples { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 5px; }
+.need-examples li::marker { color: var(--sage); }
+.need-examples button { width: 100%; min-height: 40px; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; text-align: left; background: #fff; cursor: pointer; }
+#report-events-preview { font-size: 12px; color: var(--muted); }
+.event-summary-list { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 12px; max-height: 42vh; overflow-y: auto; }
+.event-summary-item { padding: 10px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.event-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.event-summary-head strong { font-size: 13px; }
+.event-summary-item textarea { width: 100%; min-height: 72px; resize: vertical; border: 1px solid var(--line); border-radius: 12px; padding: 10px; line-height: 1.5; }
+#report-events-dialog .text-button { display: block; margin: 4px auto; }
 .segmented button { min-width: 0; font-size: 13px; }.chart-point .chart-value { top: -24px; font-size: 11px; font-weight: 700; color: var(--muted); }

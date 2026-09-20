@@ -9,6 +9,7 @@ from server import app
 
 client = TestClient(app)
 diary = '오늘 발표를 마친 뒤 친구와 대화했어요. 마음이 긴장됐어요.'
+report_entry = {'id': 'entry-1', 'date': '9월 20일', 'emotion': '불안', 'text': diary}
 
 with patch('llm.is_enabled', return_value=False):
     denied = client.post('/api/diary/organizer-draft', json={'text': diary, 'emotion': '불안'})
@@ -21,15 +22,27 @@ with patch('llm.is_enabled', return_value=False):
     assert '불안' in draft.json()['feeling']
 
     report_denied = client.post('/api/report/events', json={
-        'entries': [{'date': '9월 20일', 'text': diary}]})
+        'entries': [report_entry]})
     assert report_denied.status_code == 422
     report = client.post('/api/report/events', json={
-        'entries': [{'date': '9월 20일', 'text': diary}], 'consent': True})
+        'entries': [report_entry], 'consent': True})
     assert report.status_code == 200
     assert report.json()['generation'] == 'extractive_fallback'
-    assert '9월 20일' in report.json()['events']
+    assert report.json()['items'] == [{'id': 'entry-1', 'date': '9월 20일',
+                                      'emotion': '불안', 'event': '오늘 발표를 마친 뒤 친구와 대화했어요.'}]
     assert client.post('/api/report/events', json={
-        'entries': [{'date': '9월 20일', 'text': diary}] * 11, 'consent': True}).status_code == 422
+        'entries': [report_entry] * 11, 'consent': True}).status_code == 422
+
+with patch('diary_draft._generate_json', return_value={'items': [
+    {'id': 'entry-1', 'event': '발표를 마치고 친구와 대화했다.'}]}):
+    two = client.post('/api/report/events', json={'entries': [report_entry, {
+        'id': 'entry-2', 'date': '9월 21일', 'emotion': '편안함', 'text': '친구와 산책했다.'}],
+        'consent': True})
+    assert two.status_code == 200
+    assert len(two.json()['items']) == 2
+    assert two.json()['items'][0]['event'] == '발표를 마치고 친구와 대화했다.'
+    assert two.json()['items'][1]['event'] == '친구와 산책했다.'
+    assert two.json()['items'][1]['emotion'] == '편안함'
 
 with patch('diary_draft._generate_json', return_value={'event': '발표를 했다.', 'feeling': '긴장됐다.'}):
     generated = client.post('/api/diary/organizer-draft', json={

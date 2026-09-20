@@ -200,9 +200,10 @@ curl https://yellowmug-mindily.hf.space/api/llm/status
 
 | 항목 | 결과 |
 |---|---|
-| 참여자 | (n)명 |
-| 분석 이해도 / 공감도 / 추천 유용성 / 접근성 | (평균) |
-| 피드백으로 수정한 항목 | (건수) |
+| 참여자 | (테스트 후 기입) |
+| 분석 이해도 / 공감도 / 추천 유용성 / 접근성 | (테스트 후 기입) |
+| 사용자 피드백으로 수정한 항목 | (테스트 후 기입) |
+| 자체 점검으로 수정한 항목 | **8건** — [피드백 기록](docs/피드백기록.md) (사용자 응답과 별도로 집계) |
 
 개선 전후 비교는 [피드백 기록](docs/피드백기록.md)에 있습니다.
 
@@ -222,7 +223,6 @@ curl https://yellowmug-mindily.hf.space/api/llm/status
 ### 기록·분석
 - [모델 적용 결과](docs/모델적용결과.md) — 실제 분류 결과·추가 학습 측정값·채택 판단
 - [모델학습보고서](docs/모델학습보고서.md) — 전처리·토큰화·학습 설정 상세
-- [기술 통합 보고서](docs/INTEGRATION_REPORT.md) · [시연보고서](docs/시연보고서.md)
 - [프로그램 비평 및 향후 방향](docs/프로그램비평.md)
 - [미션수행체크리스트](docs/미션수행체크리스트.md) · [제출증빙자료](docs/제출증빙자료.md)
 
@@ -234,7 +234,6 @@ curl https://yellowmug-mindily.hf.space/api/llm/status
 
 ### 운영 안내
 - [배포 가이드](docs/DEPLOY_HF.md) · [실행 가이드](docs/RUN.md)
-- [초보자용 로드맵](docs/BEGINNER_ROADMAP.md) · [데이터 참조](docs/DATA_REFERENCE.md)
 - [사용자 테스트 진행 안내](docs/사용자테스트진행안내.md) · [테스트 기록지](docs/사용자테스트기록지.md)
 
 </details>

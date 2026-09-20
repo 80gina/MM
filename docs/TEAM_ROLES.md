@@ -1,14 +1,16 @@
 # 팀 역할 및 기여 기록
 
-> **제출 전 반드시 빈칸을 채울 것.** 예시 상태(`______`)로 제출하면 협업 평가 항목에서 감점됩니다.
+> **제출 전 이름 칸(`______`)을 반드시 채울 것.** 대표 커밋은 담당 영역에 맞춰 미리 연결해 두었습니다.
+>
+> 이 저장소의 커밋은 모두 `80gina` 계정으로 기록되어 있습니다(대리 푸시). 아래 3번 원칙에 따라 그 사실을 여기에 밝히고, 각자 실제로 맡은 산출물을 함께 연결하십시오.
 
 ## 팀 구성 (3인)
 
 | 역할 | 이름 | 담당 업무 | 대표 커밋 3건 | 주요 산출물 |
 |---|---|---|---|---|
-| 기획 / UX | ______ | 서비스 콘셉트 설계, 모바일 UI 구성, 접근성 검토, 사용자 테스트 시나리오 설계 | ______ / ______ / ______ | `docs/기획서.md`, UI 시안, 테스트 시나리오 |
-| 개발 | ______ | KcELECTRA 연동, FastAPI 서버, Agent·RAG·Memory 구현, 프론트엔드, 배포 | ______ / ______ / ______ | `server.py`, `coach_agent.py`, `rag.py`, `memory_db.py`, `dist/`, `Dockerfile` |
-| 검증 / 문서 | ______ | 기능명세·결과보고서 작성, 테스트 실행, 실사용자 5명 피드백 수집·정리 | ______ / ______ / ______ | `docs/`, `evidence/`, 개선 전후 비교표 |
+| 기획 / UX | ______ | 서비스 콘셉트 설계, 모바일 UI 구성, 접근성 검토, 사용자 테스트 시나리오 설계 | [`7689aba`](https://github.com/80gina/MM/commit/7689aba) 감정 레이더 · [`f164d49`](https://github.com/80gina/MM/commit/f164d49) 인용구·꽃·향 · [`1148bb4`](https://github.com/80gina/MM/commit/1148bb4) 활동 목록 개선 | `docs/기획서.md`, `docs/presentation.pdf`, 테스트 시나리오 |
+| 개발 | ______ | KcELECTRA 연동, FastAPI 서버, Agent·RAG·생성형 AI·Memory, 프론트엔드, 배포 | [`4c58d82`](https://github.com/80gina/MM/commit/4c58d82) 생성형 연동·HF 전환 · [`6ea3d1c`](https://github.com/80gina/MM/commit/6ea3d1c) 설치형 앱 · [`b77aea5`](https://github.com/80gina/MM/commit/b77aea5) 생성 경로 복구 | `server.py`, `coach_agent.py`, `rag.py`, `llm.py`, `memory_db.py`, `dist/`, `Dockerfile` |
+| 검증 / 문서 | ______ | 기능명세·결과보고서 작성, 테스트 실행·증거 수집, 실사용자 5명 피드백 수집·정리 | [`e547f92`](https://github.com/80gina/MM/commit/e547f92) 기록 그래프 검증 · [`557d1b0`](https://github.com/80gina/MM/commit/557d1b0) 보고서 갱신 · [`30d6917`](https://github.com/80gina/MM/commit/30d6917) 문서 정합성·증거 보강 | `docs/`, `evidence/`, 개선 전후 비교표 |
 
 > 커밋 링크 형식: `https://github.com/80gina/MM/commit/<해시>`
 

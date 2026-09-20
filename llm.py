@@ -86,12 +86,17 @@ def _looks_safe(text: str) -> bool:
     return not any(word in text for word in BANNED)
 
 
-def _payload(model: str, messages: list[dict], reasoning: bool) -> dict:
-    """모델 계열에 맞는 요청 본문을 만든다."""
+def _payload(model: str, messages: list[dict], reasoning: bool, effort: str | None = None) -> dict:
+    """모델 계열에 맞는 요청 본문을 만든다.
+
+    추론형 모델은 눈에 보이지 않는 추론 토큰을 먼저 쓴다. 한도를 짧게 주면
+    추론에 다 쓰고 본문이 빈 채로 돌아오므로, 한도를 넉넉히 주고 추론 강도를 낮춘다.
+    """
     body = {'model': model, 'messages': messages}
     if reasoning:
-        # 추론형 모델은 temperature 변경을 거부하고 토큰 한도 이름이 다르다.
-        body['max_completion_tokens'] = 512
+        body['max_completion_tokens'] = 1400
+        if effort:
+            body['reasoning_effort'] = effort
     else:
         body['temperature'] = 0.7
         body['max_tokens'] = 256
@@ -110,8 +115,14 @@ def generate_coach_message(emotion: str, stress: int, sources: list[dict]) -> di
         {'role': 'user', 'content': _build_user_prompt(emotion, stress, sources)},
     ]
     reasoning = model.lower().startswith(REASONING_PREFIXES)
-    # 모델 계열에 맞는 규격을 먼저 시도하고, 거절당하면 다른 규격으로 한 번 더 시도한다.
-    attempts = [_payload(model, messages, reasoning), _payload(model, messages, not reasoning)]
+    # 맞는 규격을 먼저 시도하고, 거절당하거나 본문이 비면 다음 후보로 넘어간다.
+    if reasoning:
+        attempts = [_payload(model, messages, True, 'low'),
+                    _payload(model, messages, True),
+                    _payload(model, messages, False)]
+    else:
+        attempts = [_payload(model, messages, False),
+                    _payload(model, messages, True, 'low')]
 
     try:
         import httpx
@@ -140,7 +151,7 @@ def generate_coach_message(emotion: str, stress: int, sources: list[dict]) -> di
             if text:
                 _LAST_ERROR = None
                 break
-            errors.append('empty content')
+            errors.append(f'empty content (finish={response.json().get("choices", [{}])[0].get("finish_reason")})')
         except Exception as error:
             errors.append(f'{type(error).__name__}: {str(error)[:160]}')
             break

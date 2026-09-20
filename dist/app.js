@@ -114,7 +114,7 @@ document.getElementById('diary-form').addEventListener('submit', async (event) =
     lastAnalysis = await analyzeDiary(text, stress);
     selectedMood = {name:'직접 골라주세요', color:'#b7bfce'};
     document.querySelectorAll('[data-mood]').forEach(x => x.classList.remove('selected'));
-    renderAnalysis(); saveEntry(lastAnalysis); showScreen('analysis');
+    renderAnalysis(); saveEntry(lastAnalysis); renderChart(); showScreen('analysis');
   } catch (error) {
     toast(error.name === 'TimeoutError' ? '분석 시간이 길어졌어요. 글은 그대로 있으니 다시 시도해주세요.' : '분석 서버에 연결하지 못했어요. 글은 그대로 보관 중이에요.');
   } finally { button.disabled = false; button.textContent = 'AI에게 마음 맡기기 ✨'; }
@@ -571,11 +571,135 @@ document.querySelector('.segmented').addEventListener('click', (event) => {
   toast(button.textContent === '월간' ? '월간 보기는 다음 스프린트에서 실제 데이터와 연결돼요.' : '주간 기록을 보고 있어요.');
 });
 
-function renderChart() {
-  const points = [54, 48, 30, 46, 72, 52, 38];
-  const faces = ['😮‍💨','😐','😣','😐','🙂','😐','😔'];
-  document.getElementById('emotion-chart').innerHTML = points.map((height, index) => `<div class="chart-point" style="--h:${height}%"><span aria-hidden="true">${faces[index]}</span></div>`).join('');
+// 마음 기록 그래프 — 이 브라우저에 저장된 실제 일기 기록으로 그린다.
+// 막대 높이는 사용자가 직접 기록한 스트레스(1~5), 막대 위 얼굴은 그날의 대표 감정이다.
+// 모델 점수를 높이로 쓰지 않는 이유: 점수가 높다고 기분이 좋은 게 아니라 오해를 부른다.
+let chartRange = 7;
+
+function readRecords() {
+  try { return JSON.parse(localStorage.getItem('mindily-records') || '[]'); } catch (_) { return []; }
 }
+
+function dayKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function entryMood(entry) {
+  const picked = entry.confirmedMood && entry.confirmedMood.name;
+  if (picked && picked !== '직접 골라주세요') return picked;
+  return entry.ranked && entry.ranked[0] ? entry.ranked[0].name : null;
+}
+
+const MOOD_FACE = {
+  '기분 좋은': '🙂', '설레는': '😊', '활기찬': '😄', '집중되는': '🙂', '편안한': '😌',
+  '걱정되는': '😰', '불안한': '😰', '답답한': '😣', '지친': '😔', '외로운': '🥺', '초조한': '😯',
+};
+
+function faceFor(mood) {
+  if (!mood) return '';
+  if (MOOD_FACE[mood]) return MOOD_FACE[mood];
+  return emotionMeta[mood] ? emotionMeta[mood][0] : '•';
+}
+
+function chartDays(records, days) {
+  const byDay = new Map();
+  records.forEach((entry) => {
+    if (!entry || !entry.date) return;
+    const key = dayKey(new Date(entry.date));
+    if (!byDay.has(key)) byDay.set(key, entry);   // 기록은 최신순이라 그날의 마지막 기록이 남는다
+  });
+  const out = [];
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - i);
+    const entry = byDay.get(dayKey(date));
+    out.push({date, entry: entry || null});
+  }
+  return out;
+}
+
+function renderChart() {
+  const host = document.getElementById('emotion-chart');
+  if (!host) return;
+  const axis = document.getElementById('chart-axis');
+  const title = document.getElementById('chart-title');
+  const badge = document.getElementById('chart-badge');
+  const readout = document.getElementById('chart-readout');
+  const records = readRecords();
+  const days = chartDays(records, chartRange);
+  const filled = days.filter(day => day.entry);
+  const weekday = ['일', '월', '화', '수', '목', '금', '토'];
+  const showFaces = chartRange <= 10;
+
+  if (title) title.textContent = chartRange === 7 ? '최근 7일 스트레스 흐름' : '최근 30일 스트레스 흐름';
+  if (badge) badge.textContent = filled.length ? `내 기록 ${filled.length}일` : '기록 없음';
+
+  host.innerHTML = days.map((day) => {
+    if (!day.entry) {
+      return '<div class="chart-point empty" style="--h:6%"></div>';
+    }
+    const stress = Number(day.entry.stress) || 1;
+    const face = showFaces ? `<span aria-hidden="true">${faceFor(entryMood(day.entry))}</span>` : '';
+    return `<div class="chart-point" style="--h:${16 + (stress / 5) * 72}%">${face}</div>`;
+  }).join('');
+
+  if (axis) {
+    axis.innerHTML = days.map((day, index) => {
+      if (chartRange === 7) return `<span>${weekday[day.date.getDay()]}</span>`;
+      const show = index === 0 || index === days.length - 1 || index === Math.floor(days.length / 2);
+      return `<span>${show ? `${day.date.getMonth() + 1}/${day.date.getDate()}` : ''}</span>`;
+    }).join('');
+  }
+
+  if (readout) {
+    readout.textContent = filled.length
+      ? filled.map(day => `${day.date.getMonth() + 1}월 ${day.date.getDate()}일 스트레스 ${day.entry.stress}/5`).join(', ')
+      : '아직 기록이 없어요.';
+  }
+  renderPattern(filled);
+}
+
+// 기록에서 읽어낸 사실만 적는다. 원인을 해석하거나 진단하지 않는다.
+function renderPattern(filled) {
+  const title = document.getElementById('pattern-title');
+  const copy = document.getElementById('pattern-copy');
+  if (!title || !copy) return;
+
+  if (!filled.length) {
+    title.textContent = '아직 기록이 없어요';
+    copy.textContent = '일기를 쓰면 이 그래프에 그날의 스트레스와 감정이 하나씩 쌓여요.';
+    return;
+  }
+  if (filled.length < 3) {
+    title.textContent = `기록 ${filled.length}일`;
+    copy.textContent = '3일 이상 쌓이면 흐름을 함께 살펴볼 수 있어요.';
+    return;
+  }
+  const values = filled.map(day => Number(day.entry.stress) || 0);
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const peak = filled.reduce((top, day) => (Number(day.entry.stress) > Number(top.entry.stress) ? day : top), filled[0]);
+  const moods = filled.map(day => entryMood(day.entry)).filter(Boolean);
+  const counted = {};
+  moods.forEach((mood) => { counted[mood] = (counted[mood] || 0) + 1; });
+  const common = Object.keys(counted).sort((a, b) => counted[b] - counted[a])[0];
+
+  title.textContent = `기록 ${filled.length}일`;
+  const parts = [`평균 스트레스는 ${average.toFixed(1)}/5였어요.`,
+                 `가장 높았던 날은 ${peak.date.getMonth() + 1}월 ${peak.date.getDate()}일(${peak.entry.stress}/5)이에요.`];
+  if (common && counted[common] > 1) parts.push(`‘${common}’이 ${counted[common]}번으로 가장 자주 기록됐어요.`);
+  copy.textContent = parts.join(' ');
+}
+
+document.addEventListener('click', (event) => {
+  const range = event.target.closest('[data-range]');
+  if (!range) return;
+  chartRange = Number(range.dataset.range) || 7;
+  document.querySelectorAll('[data-range]').forEach((button) => {
+    button.setAttribute('aria-selected', String(button === range));
+  });
+  renderChart();
+});
 
 function hydrateLatest() {
   try {

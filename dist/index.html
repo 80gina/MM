@@ -148,31 +148,8 @@
           <h2 id="coach-heading">오늘은 이런 휴식이<br>어울릴 것 같아요 🌿</h2>
           <p>지금 바로 할 수 있는 작은 활동부터 골랐어요.</p>
         </div>
-        <div class="recommend-list">
-          <article class="card recommendation featured">
-            <div class="rec-icon mint" aria-hidden="true">🌱</div><div><span class="soft-chip">1순위 추천</span><h3>1분 호흡하기</h3><p>복잡한 생각을 잠시 내려놓고 호흡의 감각에 집중해보세요.</p></div><button class="secondary-button" type="button" data-start-breath>시작하기</button>
-          </article>
-          <article class="card recommendation">
-            <div class="rec-icon blue" aria-hidden="true">♫</div><div><h3>소리로 쉬어가기</h3><p>차분한 자연의 소리를 들으며 머릿속의 속도를 낮춰봐요.</p></div><button class="secondary-button pale-blue" type="button" data-toast="지금은 데모 음원 대신 1분 호흡을 이용해보세요.">들어보기</button>
-          </article>
-          <article class="card recommendation">
-            <div class="rec-icon lilac" aria-hidden="true">☁</div><div><h3>마음 털어놓기</h3><p>조금 더 이야기하고 싶다면, 서두르지 않고 들어드릴게요.</p></div><button class="secondary-button pale-lilac" type="button" data-go="chat">이야기하기</button>
-          </article>
-        </div>
-        <article class="card recommendation organizer-card">
-          <div class="rec-icon blue" aria-hidden="true">✎</div>
-          <div><span class="soft-chip">스스로 정리하기</span><h3>감정 정리하기</h3><p>있었던 일과 지금 필요한 것을 세 문장으로 적어봐요.</p></div>
-          <button class="secondary-button" type="button" data-open-dialog="organize-dialog">시작하기</button>
-        </article>
-        <div class="card memory-card">
-          <h3>다음 휴식에 기억할까요?</h3>
-          <p>동의하면 선호하는 활동 종류만 서버에 기억해 추천 순서를 조정해요. 30일이 지나면 기억을 사용하지 않아요. 일기 원문과 위치는 저장하지 않아요.</p>
-          <label for="preferred-kind">선호 활동</label>
-          <select id="preferred-kind"><option value="호흡">호흡</option><option value="감각활동">감각 활동</option><option value="걷기">걷기</option></select>
-          <label class="privacy-inline"><input type="checkbox" id="memory-consent"> 익명 선호 활동 기억에 동의합니다.</label>
-          <button class="secondary-button" type="button" id="save-memory">선호 저장</button>
-          <button class="text-button" type="button" id="delete-memory">저장된 선호 삭제</button>
-          <p id="memory-status" role="status">저장된 선호가 없어요.</p>
+        <div class="recommend-list" id="healing-host">
+          <p class="model-note">추천 활동을 불러오는 중이에요…</p>
         </div>
         <button class="text-button session-end-button" type="button" data-open-dialog="feedback-dialog">오늘 사용을 마쳤어요 · 만족도 남기기</button>
         <p class="gentle-note">지금은 충분히 쉬어도 괜찮아요.<br>작은 휴식이 내일의 여유가 되어줄 거예요. ♡</p>

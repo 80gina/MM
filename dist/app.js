@@ -206,6 +206,14 @@ function renderAnalysis() {
   loadHealingRecommendations();
 }
 
+let healingCards = [];
+let selectedHealingId = null;
+
+const KIND_ICON = {
+  '호흡': '🌱', '감각활동': '◌', '자연의 소리': '🎧', '걷기': '👣',
+  '꽃·나무': '🌿', '필사': '✎', '음악': '♫', '취미': '✦'
+};
+
 async function loadHealingRecommendations() {
   if (!lastAnalysis) return;
   try {
@@ -218,17 +226,136 @@ async function loadHealingRecommendations() {
       });
       if (!response.ok) throw new Error('recommendation');
       data = await response.json();
+      lastAnalysis.recommendation = data;
     }
-    const list = document.querySelector('.recommend-list');
-    list.innerHTML = data.cards.slice(0, 8).map((card, index) => `<article class="card recommendation ${index === 0 ? 'featured' : ''}">
-      <div class="rec-icon ${index % 2 ? 'blue' : 'mint'}" aria-hidden="true">${card.kind === '음악' ? '♫' : card.kind === '필사' ? '✎' : card.kind === '꽃·나무' ? '🌿' : card.kind === '취미' ? '✦' : card.kind === '감각활동' ? '◌' : '🌱'}</div>
-      <div><span class="soft-chip">${index === 0 ? '1순위 추천' : escapeHtml(card.kind)}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.description)}</p></div>
-      ${card.id === 'breathing-1m' ? '<button class="secondary-button" type="button" data-start-breath>1분 시작하기</button>' : ''}
-      ${card.source_url?.startsWith('https://') ? `<a class="secondary-button" href="${escapeHtml(card.source_url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(card.source_title)} 자료 새 창에서 보기">${escapeHtml(card.source_title)} ↗</a>` : ''}
-    </article>`).join('');
+    healingCards = data.cards.slice(0, 8);
+    if (!healingCards.some(card => card.id === selectedHealingId)) {
+      selectedHealingId = healingCards[0] ? healingCards[0].id : null;
+    }
+    renderHealing();
   } catch (_) {
-    // 기본 정적 추천 카드는 API 오류에도 그대로 사용할 수 있다.
+    const host = document.getElementById('healing-host');
+    if (host) host.innerHTML = '<p class="model-note">추천을 불러오지 못했어요. 잠시 후 다시 열어주세요.</p>';
   }
+}
+
+// 활동을 탭으로 고르고, 고른 하나만 자세히 본다. 링크로 나가지 않고 앱 안에서 끝낸다.
+function renderHealing() {
+  const host = document.getElementById('healing-host');
+  if (!host || !healingCards.length) return;
+  const tabs = healingCards.map((card) => {
+    const on = card.id === selectedHealingId;
+    return `<button class="heal-tab${on ? ' active' : ''}" type="button" role="tab" aria-selected="${on}"
+      data-heal="${escapeHtml(card.id)}"><span aria-hidden="true">${KIND_ICON[card.kind] || '✦'}</span>${escapeHtml(card.title)}</button>`;
+  }).join('');
+  const card = healingCards.find(item => item.id === selectedHealingId) || healingCards[0];
+  const steps = (card.steps || []).map(step => `<li>${escapeHtml(step)}</li>`).join('');
+  let action = '';
+  if (card.id === 'breathing-1m') {
+    action = '<button class="secondary-button" type="button" data-start-breath>1분 호흡 시작하기</button>';
+  } else if (card.sound) {
+    const playing = currentSound && currentSound.kind === card.sound;
+    action = `<button class="secondary-button${playing ? ' playing' : ''}" type="button" data-sound="${escapeHtml(card.sound)}">${playing ? '■ 정지' : '▶ 소리 재생'}</button>`;
+  }
+  host.innerHTML =
+    `<div class="heal-tabs" role="tablist" aria-label="추천 활동 고르기">${tabs}</div>` +
+    `<article class="card heal-detail" role="tabpanel">
+       <div class="heal-head"><span class="soft-chip">${escapeHtml(card.kind)}</span>
+         <span class="heal-min">약 ${card.minutes}분</span></div>
+       <h3>${escapeHtml(card.title)}</h3>
+       <p class="heal-desc">${escapeHtml(card.description)}</p>
+       ${steps ? `<ol class="heal-steps">${steps}</ol>` : ''}
+       ${action}
+       <small class="model-note">출처 · ${card.source_url && card.source_url.startsWith('https://')
+         ? `<a href="${escapeHtml(card.source_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.source_title)} ↗</a>`
+         : escapeHtml(card.source_title)}</small>
+     </article>`;
+}
+
+document.addEventListener('click', (event) => {
+  const tab = event.target.closest('[data-heal]');
+  if (tab) { selectedHealingId = tab.dataset.heal; renderHealing(); return; }
+  const soundButton = event.target.closest('[data-sound]');
+  if (soundButton) { toggleNatureSound(soundButton.dataset.sound); }
+});
+
+// 자연의 소리는 녹음 파일이 아니라 브라우저가 실시간으로 만든다.
+// 저작권 문제가 없고 앱 용량도 늘지 않는다.
+let audioContext = null;
+let currentSound = null;
+
+function toggleNatureSound(kind) {
+  if (currentSound && currentSound.kind === kind) { stopNatureSound(); renderHealing(); return; }
+  stopNatureSound();
+  try {
+    currentSound = startNatureSound(kind);
+  } catch (_) {
+    toast('이 브라우저에서는 소리를 만들 수 없어요.');
+    currentSound = null;
+  }
+  renderHealing();
+}
+
+function stopNatureSound() {
+  if (!currentSound) return;
+  currentSound.stop();
+  currentSound = null;
+}
+
+function startNatureSound(kind) {
+  audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+  const ctx = audioContext;
+  if (ctx.state === 'suspended') ctx.resume();
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  let brown = 0;
+  for (let i = 0; i < data.length; i += 1) {
+    const white = Math.random() * 2 - 1;
+    brown = (brown + 0.02 * white) / 1.02;
+    data[i] = kind === 'rain' ? white * 0.45 : brown * 3.2;
+  }
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  let lfo = null;
+  if (kind === 'rain') {
+    filter.type = 'highpass';
+    filter.frequency.value = 750;
+  } else if (kind === 'wind') {
+    filter.type = 'lowpass';
+    filter.frequency.value = 420;
+    lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.06;
+    const depth = ctx.createGain();
+    depth.gain.value = 240;
+    lfo.connect(depth); depth.connect(filter.frequency); lfo.start();
+  } else {
+    filter.type = 'lowpass';
+    filter.frequency.value = 700;
+    lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.09;
+    const depth = ctx.createGain();
+    depth.gain.value = 0.16;
+    lfo.connect(depth); depth.connect(gain.gain); lfo.start();
+  }
+  source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  const level = kind === 'rain' ? 0.16 : kind === 'wind' ? 0.22 : 0.2;
+  gain.gain.setValueAtTime(0, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(level, ctx.currentTime + 1.4);
+  source.start();
+  return {
+    kind,
+    stop() {
+      const now = ctx.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.6);
+      setTimeout(() => { try { source.stop(); if (lfo) lfo.stop(); } catch (_) {} }, 700);
+    }
+  };
 }
 
 const organizerKey = 'mindily-thoughts';

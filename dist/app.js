@@ -869,6 +869,18 @@ function localEventDraft(entries) {
     topic: eventTopic(entry.text)
   }));
 }
+function storyAnalysis(group) {
+  const texts = group.items.map(item => item.event).filter(Boolean);
+  const joined = texts.join(' ');
+  const causeMatch = joined.match(/(.{2,60})(?:때문에|때문이어서|으로 인해|라서|어서|해서)\s/);
+  const cause = causeMatch ? causeMatch[1].trim() : '기록에 명시되지 않음';
+  const emotions = [...new Set(group.items.map(item => item.emotion).filter(Boolean))];
+  return {
+    cause,
+    emotion: emotions.length ? emotions.join(' → ') : '감정 미기록',
+    core: texts.join(' → ').slice(0, 360) || '기록된 핵심 내용이 없어요.'
+  };
+}
 function renderEventDraft() {
   const list = document.getElementById('report-event-list');
   list.replaceChildren();
@@ -885,11 +897,17 @@ function renderEventDraft() {
     remove.setAttribute('aria-label', `${group.title} 사건 삭제`);
     remove.addEventListener('click', () => { eventDraft.splice(groupIndex, 1); renderEventDraft(); });
     heading.append(title, remove);
-    const moods = group.items.map(item => item.emotion || '감정 미기록');
+    const analysis = storyAnalysis(group);
     const summary = document.createElement('p'); summary.className = 'event-journey-summary';
-    summary.innerHTML = `<strong>경과 요약</strong> ${escapeHtml(group.items.map(item => `${item.date} ${item.event}`).join(' → '))}`;
+    summary.innerHTML = `<strong>핵심 내용</strong> ${escapeHtml(analysis.core)}`;
+    const analysisList = document.createElement('dl'); analysisList.className = 'event-analysis-grid';
+    [['주요 원인', analysis.cause], ['주된 감정', analysis.emotion]].forEach(([label, value]) => {
+      const dt = document.createElement('dt'); dt.textContent = label;
+      const dd = document.createElement('dd'); dd.textContent = value;
+      analysisList.append(dt, dd);
+    });
     const flow = document.createElement('p'); flow.className = 'event-mood-flow';
-    flow.textContent = `${moods.length > 1 ? '감정 변화' : '기록된 감정'}: ${moods.join(' → ')}`;
+    flow.textContent = `감정 변화: ${analysis.emotion}`;
     const timeline = document.createElement('ol'); timeline.className = 'event-timeline';
     group.items.forEach((item, itemIndex) => {
       const point = document.createElement('li');
@@ -923,7 +941,7 @@ function renderEventDraft() {
       field.addEventListener('input', () => { item.event = field.value; });
       point.append(pointHead, field); timeline.append(point);
     });
-    row.append(heading, summary, flow, timeline);
+    row.append(heading, summary, analysisList, flow, timeline);
     list.append(row);
   });
   if (!eventDraft.length) {
@@ -940,6 +958,9 @@ document.getElementById('report-draft-button').addEventListener('click', () => {
   document.getElementById('report-draft-consent').checked = false;
   const saved = readReportEvents(chartRange);
   eventDraft = saved.length ? structuredClone(saved) : groupEvents(localEventDraft(rangeEntries()));
+  const overview = document.getElementById('report-events-overview');
+  const overviewText = overview?.querySelector('span');
+  if (overviewText) overviewText.textContent = `${rangeEntries().length}개 기록 · ${eventDraft.length}개 사건으로 묶었어요.`;
   renderEventDraft();
   document.getElementById('report-events-dialog').showModal();
 });
@@ -1006,10 +1027,16 @@ function reportText() {
   const head = `Mindily 감정 분석 보고서 — ${report.label}\n만든 날짜: ${dateText(new Date())}\n`;
   if (report.empty) return `${head}\n${report.empty}\n`;
   const body = report.lines.map(([name, value]) => `- ${name}: ${value}`).join('\n');
-  const events = readReportEvents(chartRange).map(group =>
-    `- ${group.title}\n  감정 변화: ${group.items.map(item => item.emotion).join(' → ')}\n` +
-    group.items.map(item => `  · ${item.date} (${item.emotion}) ${item.event}`).join('\n')).join('\n');
-  return `${head}\n${body}${events ? `\n\n주요 사건 (사용자 확인·수정)\n${events}` : ''}\n\n이 보고서는 기록과 사용자가 확인한 사건 요약을 담고 있으며, 의학적 판단이나 진단이 아닙니다.\n일기 원문 전체는 포함하지 않습니다.\n`;
+  const groups = readReportEvents(chartRange);
+  const events = groups.map((group, index) => {
+    const analysis = storyAnalysis(group);
+    return `${index + 1}. ${group.title}\n  주요 원인: ${analysis.cause}\n  주된 감정: ${analysis.emotion}\n  핵심 내용: ${analysis.core}\n  날짜별 기록:\n` +
+      group.items.map(item => `    · ${item.date} (${item.emotion}) ${item.event}`).join('\n');
+  }).join('\n\n');
+  const overall = groups.length
+    ? `사연 ${groups.length}건을 날짜 흐름으로 묶어 보았어요. ${report.moods?.length ? `가장 자주 기록된 감정은 ${report.moods[0][0]}이에요.` : ''} ${report.lines.find(line => line[0] === '기간 전반 대비 후반')?.[1] || ''}`.trim()
+    : '저장된 주요 사건이 없어 종합정리를 만들 수 없어요.';
+  return `${head}\n1. 개요\n${body}\n\n2. 사연별 요약 분석\n${events || '저장된 주요 사건이 없어요.'}\n\n3. 종합정리\n${overall}\n\n이 보고서는 기록과 사용자가 확인한 사건 요약을 담고 있으며, 의학적 판단이나 진단이 아닙니다.\n일기 원문 전체는 포함하지 않습니다.\n`;
 }
 
 document.addEventListener('click', (event) => {

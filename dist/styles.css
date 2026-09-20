@@ -189,6 +189,11 @@ dialog { border: 0; padding: 0; color: var(--ink); }.sheet-dialog { width: min(4
 .event-summary-head input { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-weight: 700; }
 .event-journey-summary { margin: 8px 0 7px; padding: 9px 10px; border-radius: 11px; background: #f6f8ff; color: var(--ink); font-size: 12px; line-height: 1.55; }
 .event-journey-summary strong { color: #526fcf; }
+.event-report-overview { margin: 10px 0 12px; padding: 11px 12px; border-radius: 14px; background: #eef5ed; color: var(--ink); display: grid; gap: 3px; font-size: 12px; }
+.event-report-overview strong { color: #438976; font-size: 13px; }
+.event-analysis-grid { margin: 8px 0; display: grid; grid-template-columns: 76px 1fr; gap: 5px 8px; font-size: 12px; }
+.event-analysis-grid dt { color: var(--muted); }
+.event-analysis-grid dd { margin: 0; font-weight: 600; line-height: 1.45; }
 .event-mood-flow { margin: 4px 0 10px; font-size: 12px; color: #526fcf; font-weight: 700; }
 .event-timeline { margin: 0; padding-left: 19px; display: grid; gap: 10px; }
 .event-timeline li::marker { color: var(--sage); }

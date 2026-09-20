@@ -822,7 +822,7 @@ function renderReport() {
   if (!body) return;
   const saved = readReportEvents(chartRange);
   document.getElementById('report-events-preview').textContent = saved.length
-    ? `저장한 사건 ${saved.length}건 · 팝업에서 확인하거나 수정할 수 있어요.`
+    ? `저장한 주요 사건 ${saved.length}건 · 날짜별 경과와 감정 변화를 확인할 수 있어요.`
     : '저장한 사건 목록이 없어요.';
   const report = reportLines();
   if (report.empty) {
@@ -845,44 +845,85 @@ function readReportEvents(range) {
     const stored = localStorage.getItem(reportEventKey(range));
     if (!stored) return [];
     const parsed = JSON.parse(stored);
-    if (Array.isArray(parsed)) return parsed.filter(item => item && typeof item.event === 'string');
+    if (Array.isArray(parsed)) {
+      if (parsed.some(item => Array.isArray(item?.items))) return parsed.filter(item => item && Array.isArray(item.items));
+      return groupEvents(parsed.filter(item => item && typeof item.event === 'string'));
+    }
   } catch (_) {
     // Earlier versions stored a free-text summary. Preserve it as one editable item.
     try {
       const old = localStorage.getItem(reportEventKey(range));
-      if (old) return [{id: 'legacy', date: '이전 요약', emotion: '감정 미기록', event: old}];
+      if (old) return [{id: 'legacy', title: '이전 요약', items: [
+        {id: 'legacy-item', date: '이전 요약', emotion: '감정 미기록', event: old}]}];
     } catch (_) {}
   }
   return [];
 }
+const {eventTopic, groupEvents} = MindilyEventGroups;
 function localEventDraft(entries) {
   return entries.filter(entry => entry.text?.trim()).map((entry, index) => ({
     id: `${entry.date}-${index}`,
     date: dateText(entry.date),
     emotion: entryMood(entry) || '감정 미기록',
-    event: entry.text.trim().split(/(?<=[.!?。])\s+|\n+/)[0].slice(0, 230)
+    event: entry.text.trim().split(/(?<=[.!?。])\s+|\n+/)[0].slice(0, 230),
+    topic: eventTopic(entry.text)
   }));
 }
 function renderEventDraft() {
   const list = document.getElementById('report-event-list');
   list.replaceChildren();
-  eventDraft.forEach((item, index) => {
-    const row = document.createElement('li');
-    row.className = 'event-summary-item';
+  eventDraft.forEach((group, groupIndex) => {
+    const row = document.createElement('li'); row.className = 'event-summary-item';
     const heading = document.createElement('div');
     heading.className = 'event-summary-head';
-    const name = document.createElement('strong');
-    name.textContent = `${item.date} · ${item.emotion}`;
+    const title = document.createElement('input');
+    title.value = group.title; title.maxLength = 80;
+    title.setAttribute('aria-label', '주요 사건 제목 수정');
+    title.addEventListener('input', () => { group.title = title.value; });
     const remove = document.createElement('button');
-    remove.type = 'button'; remove.className = 'text-button'; remove.textContent = '항목 삭제';
-    remove.setAttribute('aria-label', `${item.date} 사건 항목 삭제`);
-    remove.addEventListener('click', () => { eventDraft.splice(index, 1); renderEventDraft(); });
-    heading.append(name, remove);
-    const field = document.createElement('textarea');
-    field.value = item.event; field.maxLength = 500;
-    field.setAttribute('aria-label', `${item.date} ${item.emotion} 주요 사건 수정`);
-    field.addEventListener('input', () => { item.event = field.value; });
-    row.append(heading, field);
+    remove.type = 'button'; remove.className = 'text-button'; remove.textContent = '사건 삭제';
+    remove.setAttribute('aria-label', `${group.title} 사건 삭제`);
+    remove.addEventListener('click', () => { eventDraft.splice(groupIndex, 1); renderEventDraft(); });
+    heading.append(title, remove);
+    const moods = group.items.map(item => item.emotion || '감정 미기록');
+    const summary = document.createElement('p'); summary.className = 'event-journey-summary';
+    summary.innerHTML = `<strong>경과 요약</strong> ${escapeHtml(group.items.map(item => `${item.date} ${item.event}`).join(' → '))}`;
+    const flow = document.createElement('p'); flow.className = 'event-mood-flow';
+    flow.textContent = `${moods.length > 1 ? '감정 변화' : '기록된 감정'}: ${moods.join(' → ')}`;
+    const timeline = document.createElement('ol'); timeline.className = 'event-timeline';
+    group.items.forEach((item, itemIndex) => {
+      const point = document.createElement('li');
+      const pointHead = document.createElement('div'); pointHead.className = 'event-summary-head';
+      const dateMood = document.createElement('strong');
+      dateMood.textContent = `${item.date} · ${item.emotion}`;
+      const actions = document.createElement('div'); actions.className = 'event-item-actions';
+      if (group.items.length > 1) {
+        const separate = document.createElement('button');
+        separate.type = 'button'; separate.className = 'text-button'; separate.textContent = '분리';
+        separate.setAttribute('aria-label', `${item.date} 기록을 별도 사건으로 분리`);
+        separate.addEventListener('click', () => {
+          group.items.splice(itemIndex, 1);
+          eventDraft.splice(groupIndex + 1, 0, {id: item.id, title: item.event.slice(0, 28), items: [item]});
+          renderEventDraft();
+        });
+        actions.append(separate);
+      }
+      const removeItem = document.createElement('button');
+      removeItem.type = 'button'; removeItem.className = 'text-button'; removeItem.textContent = '기록 삭제';
+      removeItem.setAttribute('aria-label', `${item.date} 사건 기록 삭제`);
+      removeItem.addEventListener('click', () => {
+        group.items.splice(itemIndex, 1);
+        if (!group.items.length) eventDraft.splice(groupIndex, 1);
+        renderEventDraft();
+      });
+      actions.append(removeItem); pointHead.append(dateMood, actions);
+      const field = document.createElement('textarea');
+      field.value = item.event; field.maxLength = 500;
+      field.setAttribute('aria-label', `${item.date} ${item.emotion} 사건 경과 수정`);
+      field.addEventListener('input', () => { item.event = field.value; });
+      point.append(pointHead, field); timeline.append(point);
+    });
+    row.append(heading, summary, flow, timeline);
     list.append(row);
   });
   if (!eventDraft.length) {
@@ -898,7 +939,7 @@ document.getElementById('report-draft-button').addEventListener('click', () => {
   document.getElementById('report-draft-status').textContent = '';
   document.getElementById('report-draft-consent').checked = false;
   const saved = readReportEvents(chartRange);
-  eventDraft = saved.length ? structuredClone(saved) : localEventDraft(rangeEntries());
+  eventDraft = saved.length ? structuredClone(saved) : groupEvents(localEventDraft(rangeEntries()));
   renderEventDraft();
   document.getElementById('report-events-dialog').showModal();
 });
@@ -906,7 +947,8 @@ document.getElementById('report-generate-button').addEventListener('click', asyn
   const entries = localEventDraft(rangeEntries());
   if (!entries.length) return toast('선택한 기간에 일기 기록이 없어요.');
   if (!document.getElementById('report-draft-consent').checked) return toast('초안 생성 전 전송 안내에 동의해 주세요.');
-  if (eventDraft.some(item => item.event.trim()) && !window.confirm('지금 수정 중인 사건 목록을 새 초안으로 바꿀까요?')) return;
+  if (eventDraft.some(group => group.items.some(item => item.event.trim())) &&
+      !window.confirm('지금 수정 중인 사건 목록을 새 초안으로 바꿀까요?')) return;
   const button = event.currentTarget;
   const status = document.getElementById('report-draft-status');
   button.disabled = true;
@@ -931,14 +973,16 @@ document.getElementById('report-generate-button').addEventListener('click', asyn
       result.push(...draft.items);
       generated += Number(draft.generated_count) || 0;
     }
-    eventDraft = result;
+    eventDraft = groupEvents(result);
     renderEventDraft();
-    status.textContent = `${result.length}건의 초안을 만들었어요${generated ? ` (AI 요약 ${generated}건)` : ' (문장 발췌)'}. 확인하고 저장해 주세요.`;
+    status.textContent = `${result.length}개 기록을 ${eventDraft.length}개 주요 사건으로 묶었어요${generated ? ` (AI 요약 ${generated}건)` : ' (문장 발췌)'}. 사건의 연결과 감정을 확인하고 저장해 주세요.`;
   } catch (_) { status.textContent = '요약 중 오류가 났어요. 기존 목록은 유지했어요. 다시 시도해 주세요.'; }
   finally { button.disabled = false; button.textContent = original; }
 });
 document.getElementById('report-events-save').addEventListener('click', () => {
-  const kept = eventDraft.map(item => ({...item, event: item.event.trim()})).filter(item => item.event);
+  const kept = eventDraft.map(group => ({...group, title: group.title.trim() || '기록된 사건',
+    items: group.items.map(item => ({...item, event: item.event.trim()})).filter(item => item.event)}))
+    .filter(group => group.items.length);
   if (!kept.length) return toast('저장할 사건이 없어요.');
   try {
     localStorage.setItem(reportEventKey(editingReportRange), JSON.stringify(kept));
@@ -962,7 +1006,9 @@ function reportText() {
   const head = `Mindily 감정 분석 보고서 — ${report.label}\n만든 날짜: ${dateText(new Date())}\n`;
   if (report.empty) return `${head}\n${report.empty}\n`;
   const body = report.lines.map(([name, value]) => `- ${name}: ${value}`).join('\n');
-  const events = readReportEvents(chartRange).map(item => `- ${item.date} · ${item.emotion}: ${item.event}`).join('\n');
+  const events = readReportEvents(chartRange).map(group =>
+    `- ${group.title}\n  감정 변화: ${group.items.map(item => item.emotion).join(' → ')}\n` +
+    group.items.map(item => `  · ${item.date} (${item.emotion}) ${item.event}`).join('\n')).join('\n');
   return `${head}\n${body}${events ? `\n\n주요 사건 (사용자 확인·수정)\n${events}` : ''}\n\n이 보고서는 기록과 사용자가 확인한 사건 요약을 담고 있으며, 의학적 판단이나 진단이 아닙니다.\n일기 원문 전체는 포함하지 않습니다.\n`;
 }
 

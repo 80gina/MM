@@ -5,7 +5,7 @@
  *  - 캐시에는 화면 자원(HTML·CSS·JS·아이콘)만 담는다.
  *  - 버전을 올리면 이전 캐시는 즉시 삭제된다.
  */
-const VERSION = 'mindily-r20260920events2';
+const VERSION = 'mindily-r20260920journeys3';
 const SHELL = [
   './',
   'index.html',

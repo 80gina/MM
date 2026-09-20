@@ -13,6 +13,8 @@
     "maximum_entries_per_request": 10,
     "all_entries_in_selected_period_batched": true,
     "dated_event_emotion_items_returned": true,
+    "event_topic_and_emotion_change_grouping": true,
+    "manual_split_and_title_edit": true,
     "missing_generated_items_use_extractive_fallback": true,
     "editable_popup_save_and_delete": true,
     "local_generation": "extractive_fallback"

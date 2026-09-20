@@ -29,12 +29,13 @@ with patch('llm.is_enabled', return_value=False):
     assert report.status_code == 200
     assert report.json()['generation'] == 'extractive_fallback'
     assert report.json()['items'] == [{'id': 'entry-1', 'date': '9월 20일',
-                                      'emotion': '불안', 'event': '오늘 발표를 마친 뒤 친구와 대화했어요.'}]
+                                      'emotion': '불안', 'event': '오늘 발표를 마친 뒤 친구와 대화했어요.',
+                                      'topic': '발표'}]
     assert client.post('/api/report/events', json={
         'entries': [report_entry] * 11, 'consent': True}).status_code == 422
 
 with patch('diary_draft._generate_json', return_value={'items': [
-    {'id': 'entry-1', 'event': '발표를 마치고 친구와 대화했다.'}]}):
+    {'id': 'entry-1', 'topic': '발표', 'event': '발표를 마치고 친구와 대화했다.'}]}):
     two = client.post('/api/report/events', json={'entries': [report_entry, {
         'id': 'entry-2', 'date': '9월 21일', 'emotion': '편안함', 'text': '친구와 산책했다.'}],
         'consent': True})
@@ -43,6 +44,23 @@ with patch('diary_draft._generate_json', return_value={'items': [
     assert two.json()['items'][0]['event'] == '발표를 마치고 친구와 대화했다.'
     assert two.json()['items'][1]['event'] == '친구와 산책했다.'
     assert two.json()['items'][1]['emotion'] == '편안함'
+
+friend_entries = [
+    {'id': 'fight', 'date': '10월 1일', 'emotion': '화남', 'text': '친구와 의견 차이로 다투었다.'},
+    {'id': 'reconcile', 'date': '10월 2일', 'emotion': '안도', 'text': '친구에게 사과하고 화해했다.'},
+]
+with patch('diary_draft._generate_json', return_value={'items': [
+    {'id': 'fight', 'topic': '친구와 싸움', 'event': '친구와 의견 차이로 다투었다.'},
+    {'id': 'reconcile', 'topic': '친구와 화해', 'event': '친구에게 사과하고 화해했다.'},
+]}):
+    timeline = client.post('/api/report/events', json={'entries': friend_entries, 'consent': True})
+    assert timeline.status_code == 200
+    assert [(item['date'], item['emotion'], item['topic']) for item in timeline.json()['items']] == [
+        ('10월 1일', '화남', '친구와 싸움'), ('10월 2일', '안도', '친구와 화해')]
+
+with patch('llm.is_enabled', return_value=False):
+    fallback = client.post('/api/report/events', json={'entries': friend_entries, 'consent': True})
+    assert [item['topic'] for item in fallback.json()['items']] == ['친구와의 일', '친구와의 일']
 
 with patch('diary_draft._generate_json', return_value={'event': '발표를 했다.', 'feeling': '긴장됐다.'}):
     generated = client.post('/api/diary/organizer-draft', json={

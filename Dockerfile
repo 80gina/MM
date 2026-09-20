@@ -25,7 +25,7 @@ r='2eaf89d8d2cbfd902b93e5ec989db2ec103806fb'; \
 AutoTokenizer.from_pretrained(m, revision=r); \
 AutoModelForSequenceClassification.from_pretrained(m, revision=r, use_safetensors=True)"
 
-COPY --chown=user server.py coach_agent.py rag.py llm.py \
+COPY --chown=user server.py coach_agent.py rag.py llm.py comfort_knowledge.py \
      feedback_db.py healing_knowledge.py memory_db.py ./
 COPY --chown=user index.html app.js styles.css ./dist/
 

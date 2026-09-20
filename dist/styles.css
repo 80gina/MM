@@ -140,3 +140,5 @@ dialog { border: 0; padding: 0; color: var(--ink); }.sheet-dialog { width: min(4
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
+
+.quote-block { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(66,78,113,.18); }.quote-text { margin: 0 0 6px; font-size: 13.5px; line-height: 1.65; font-style: italic; color: var(--ink); }.quote-by { display: block; font-size: 11px; color: var(--muted); font-style: normal; }.quote-by a { color: var(--muted); }.quote-license { display: block; font-size: 9.5px; color: var(--muted); opacity: .8; margin-top: 2px; }.care-card { padding: 20px; }.care-row { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; margin-bottom: 12px; }.care-row:last-of-type { margin-bottom: 4px; }.care-icon { font-size: 22px; line-height: 1.2; }.care-row strong { display: block; font-size: 14px; }.care-meaning { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }.care-row p { margin: 5px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.6; }

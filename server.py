@@ -18,6 +18,7 @@ from healing_knowledge import retrieve_activities
 from memory_db import remember, recall, forget
 from coach_agent import run_coach_agent
 from rag import answer_with_grounding, retrieve_grounding
+from comfort_knowledge import comfort_for
 import llm
 
 MODEL = os.getenv('MINDILY_MODEL_PATH', 'GGARA02/kcelectra-korean-emotion')
@@ -153,7 +154,7 @@ def rag_answer(request: HealingRequest):
 @app.post('/api/agent/coach')
 def coach(request: AgentRequest):
     """Route a diary or chat turn through the real model and sourced activity tool."""
-    return run_coach_agent(
+    result = run_coach_agent(
         request.text, request.self_reported_stress, request.context, request.memory_token,
         lambda text, stress: analyze(Diary(text=text, self_reported_stress=stress)),
         lambda emotion, stress, token: recommend_healing(
@@ -161,6 +162,10 @@ def coach(request: AgentRequest):
         request.known_emotion,
         lambda emotion, stress: answer_with_grounding(emotion, stress, minutes=20),
     )
+    analysis = result.get('analysis')
+    lead = analysis['labels'][0]['name'] if analysis else (request.known_emotion or '불안')
+    result['comfort'] = comfort_for(lead)
+    return result
 
 
 @app.post('/api/memory')

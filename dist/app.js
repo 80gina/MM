@@ -97,7 +97,7 @@ async function analyzeDiary(text, stress) {
   const analysis = data.analysis;
   return {id: crypto.randomUUID(), ranked: analysis.labels.map(x => ({name:x.name, score:x.score})),
     model: analysis.model, revision: analysis.revision, chunks: analysis.chunks,
-    agentMessage: data.message, recommendation: data.recommendation,
+    agentMessage: data.message, recommendation: data.recommendation, comfort: data.comfort,
     stress, text, tags: [...selectedTags], date: new Date().toISOString(),
     detailedMood: null, confirmedMood: null};
 }
@@ -162,6 +162,28 @@ function emotionRadar(ranked) {
   return `${svg}<p class="sr-only">${readable}</p>`;
 }
 
+// 저작권 만료 인용구 · 추천 꽃 · 추천 향을 그린다. 효능은 주장하지 않는다.
+function renderComfort(comfort) {
+  const quoteBox = document.getElementById('comfort-quote');
+  const careBox = document.getElementById('comfort-care');
+  if (!comfort) { if (quoteBox) quoteBox.hidden = true; if (careBox) careBox.hidden = true; return; }
+  const { quote, flower, scent } = comfort;
+  quoteBox.hidden = false;
+  quoteBox.innerHTML =
+    `<blockquote class="quote-text">${quote.text}</blockquote>` +
+    `<cite class="quote-by">— <a href="${quote.source_url}" target="_blank" rel="noopener">${quote.author}</a>` +
+    `<span class="quote-license">${quote.license}</span></cite>`;
+  careBox.hidden = false;
+  careBox.innerHTML =
+    `<div class="card-label">오늘 곁에 두면 좋은 것</div>` +
+    `<div class="care-row"><span class="care-icon" aria-hidden="true">🌼</span>` +
+    `<div><strong>${flower.name}</strong><span class="care-meaning">꽃말 · ${flower.meaning}</span>` +
+    `<p>${flower.note}</p></div></div>` +
+    `<div class="care-row"><span class="care-icon" aria-hidden="true">🌿</span>` +
+    `<div><strong>${scent.name}</strong><p>${scent.note}</p></div></div>` +
+    `<small class="model-note">${scent.safety}</small>`;
+}
+
 function renderAnalysis() {
   const top = lastAnalysis.ranked.slice(0, 3);
   document.getElementById('emotion-result').innerHTML = emotionRadar(lastAnalysis.ranked);
@@ -178,6 +200,7 @@ function renderAnalysis() {
     당황: '예상하지 못한 일이 마음의 리듬을 흔든 것 같아요. 천천히 상황을 다시 정리해봐요.'
   };
   document.getElementById('analysis-message').textContent = lastAnalysis.agentMessage || messages[lead];
+  renderComfort(lastAnalysis.comfort);
   updateMoodUI();
   updateRecordUI(lastAnalysis);
   loadHealingRecommendations();

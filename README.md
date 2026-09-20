@@ -7,7 +7,7 @@
 |---|---|
 | 🌐 **서비스 열기** | 임시 HTTPS 주소 (테스트 시 발급) · 상시 주소는 `yellowmug/mindily` 쿼터 해제 후 |
 | 📄 **결과보고서** | [docs/결과보고서.md](docs/결과보고서.md) |
-| 📊 **발표자료** | [docs/presentation.pdf](docs/presentation.pdf) |
+| 📊 **발표자료** | [docs/presentation.pdf](docs/presentation.pdf) · [편집용 .pptx](docs/presentation.pptx) |
 | 🎬 **시연 영상** | (YouTube 링크 기입) |
 
 ---

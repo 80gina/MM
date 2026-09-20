@@ -43,6 +43,10 @@ copy /Y "%ROOT%SPACE_README.md" "%TMP%\README.md" >nul
 if exist "%TMP%\dist" rmdir /S /Q "%TMP%\dist"
 xcopy "%ROOT%dist" "%TMP%\dist" /E /I /Y >nul
 
+rem The Space kept the frontend at its root before; the Dockerfile now uses dist/,
+rem so drop the stale root copies instead of leaving them unused in the Space.
+for %%F in (index.html app.js styles.css sw.js manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png) do if exist "%TMP%\%%F" del /Q "%TMP%\%%F"
+
 pushd "%TMP%"
 for /f "delims=" %%H in ('git rev-parse HEAD') do set "BASE_COMMIT=%%H"
 echo [3/5] Staging changes...

@@ -16,6 +16,31 @@ try { memoryToken = localStorage.getItem('mindily-memory-token'); } catch (_) {}
 
 const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
+const defaultQuote = '조금 느려도 괜찮아요.\n당신은 지금도 충분히 잘하고 있어요.';
+const quoteKey = 'mindily-personal-quote';
+function renderPersonalQuote() {
+  let value = defaultQuote;
+  try { value = localStorage.getItem(quoteKey) || defaultQuote; } catch (_) {}
+  document.getElementById('personal-quote').textContent = `“${value}”`;
+  document.getElementById('home-personal-quote').textContent = `“${value}”`;
+  document.getElementById('quote-input').value = value;
+}
+document.getElementById('quote-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const value = document.getElementById('quote-input').value.trim();
+  if (!value) return toast('문구를 적어주세요.');
+  try {
+    localStorage.setItem(quoteKey, value);
+    renderPersonalQuote();
+    document.getElementById('quote-dialog').close();
+    toast('내 문구를 이 브라우저에 저장했어요.');
+  } catch (_) { toast('문구를 저장하지 못했어요.'); }
+});
+document.getElementById('quote-reset').addEventListener('click', () => {
+  try { localStorage.removeItem(quoteKey); renderPersonalQuote(); toast('처음 문구로 되돌렸어요.'); }
+  catch (_) { toast('문구를 되돌리지 못했어요.'); }
+});
+
 function showScreen(name, push = true) {
   if (!titles.hasOwnProperty(name)) return;
   screens.forEach((screen) => screen.classList.toggle('active', screen.dataset.screen === name));
@@ -393,6 +418,34 @@ function hydrateOrganizer() {
   } catch (_) {}
 }
 
+document.getElementById('organize-draft-button').addEventListener('click', async (event) => {
+  const entry = lastAnalysis?.text ? lastAnalysis : readRecords()[0];
+  if (!entry?.text) return toast('먼저 감정 일기를 작성해 주세요.');
+  if (!document.getElementById('organize-draft-consent').checked) return toast('초안 생성 전 전송 안내에 동의해 주세요.');
+  const eventField = document.getElementById('organize-event');
+  const feelingField = document.getElementById('organize-feeling');
+  if ((eventField.value.trim() || feelingField.value.trim()) &&
+      !window.confirm('현재 작성한 첫 두 칸을 새 초안으로 바꿀까요?')) return;
+  const button = event.currentTarget;
+  button.disabled = true; button.textContent = '일기를 정리하고 있어요…';
+  try {
+    const response = await fetch('/api/diary/organizer-draft', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: entry.text, emotion: entryMood(entry) || '', consent: true}),
+      signal: AbortSignal.timeout(90000)
+    });
+    if (!response.ok) throw new Error('draft');
+    const draft = await response.json();
+    eventField.value = draft.event || '';
+    feelingField.value = draft.feeling || '';
+    document.getElementById('organize-status').textContent = draft.generation === 'llm_draft'
+      ? 'AI 초안을 만들었어요. 사실과 감정 표현을 확인하고 자유롭게 고쳐 주세요.'
+      : '일기 문장과 감정 분류로 임시 초안을 만들었어요. 직접 확인하고 고쳐 주세요.';
+    eventField.focus();
+  } catch (_) { toast('초안을 만들지 못했어요. 잠시 후 다시 시도해 주세요.'); }
+  finally { button.disabled = false; button.textContent = '일기로 초안 만들기'; }
+});
+
 document.getElementById('organize-form').addEventListener('submit', (event) => {
   event.preventDefault();
   const values = Object.fromEntries(organizerFields.map((name) =>
@@ -697,6 +750,7 @@ function renderChart() {
 // 감정 분석 보고서 — 기간별 요약.
 // 기록에 있는 값만 계산해 적고, 원인·진단·조언은 만들지 않는다.
 const RANGE_LABEL = {7: '최근 7일', 30: '최근 30일', 365: '최근 12개월'};
+const reportEventKey = (range) => `mindily-report-events-${range}`;
 
 function rangeEntries() {
   const records = readRecords();
@@ -758,6 +812,10 @@ function reportLines() {
 function renderReport() {
   const body = document.getElementById('report-body');
   if (!body) return;
+  const eventsField = document.getElementById('report-events');
+  try { eventsField.value = localStorage.getItem(reportEventKey(chartRange)) || ''; }
+  catch (_) { eventsField.value = ''; }
+  document.getElementById('report-draft-status').textContent = '';
   const report = reportLines();
   if (report.empty) {
     body.innerHTML = `<p class="report-empty">${report.empty}</p>`;
@@ -772,12 +830,47 @@ function renderReport() {
   body.innerHTML = `<dl class="report-rows">${rows}</dl>${bars ? `<div class="report-bars">${bars}</div>` : ''}`;
 }
 
+document.getElementById('report-events').addEventListener('input', (event) => {
+  try { localStorage.setItem(reportEventKey(chartRange), event.currentTarget.value); }
+  catch (_) { document.getElementById('report-draft-status').textContent = '수정한 요약을 저장하지 못했어요.'; }
+});
+
+document.getElementById('report-draft-button').addEventListener('click', async (event) => {
+  const requestedRange = chartRange;
+  const entries = rangeEntries().filter(entry => entry.text?.trim()).slice(-10);
+  if (!entries.length) return toast('선택한 기간에 일기 기록이 없어요.');
+  if (!document.getElementById('report-draft-consent').checked) return toast('초안 생성 전 전송 안내에 동의해 주세요.');
+  const field = document.getElementById('report-events');
+  if (field.value.trim() && !window.confirm('직접 수정한 사건 요약을 새 초안으로 바꿀까요?')) return;
+  const button = event.currentTarget;
+  button.disabled = true; button.textContent = '사건을 정리하고 있어요…';
+  try {
+    const response = await fetch('/api/report/events', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({entries: entries.map(entry => ({date: dateText(entry.date), text: entry.text})), consent: true}),
+      signal: AbortSignal.timeout(90000)
+    });
+    if (!response.ok) throw new Error('report');
+    const draft = await response.json();
+    if (chartRange === requestedRange) field.value = draft.events || '';
+    try { localStorage.setItem(reportEventKey(requestedRange), draft.events || ''); }
+    catch (_) { toast('초안은 표시했지만 이 브라우저에 저장하지 못했어요.'); }
+    if (chartRange !== requestedRange) return;
+    document.getElementById('report-draft-status').textContent = draft.generation === 'llm_draft'
+      ? 'AI가 사건을 요약했어요. 사실을 확인하고 수정해 주세요.'
+      : '일기에서 문장을 발췌한 임시 요약이에요. 직접 확인하고 수정해 주세요.';
+    field.focus();
+  } catch (_) { toast('사건 요약을 만들지 못했어요. 다시 시도해 주세요.'); }
+  finally { button.disabled = false; button.textContent = '주요 사건 초안 만들기'; }
+});
+
 function reportText() {
   const report = reportLines();
   const head = `Mindily 감정 분석 보고서 — ${report.label}\n만든 날짜: ${dateText(new Date())}\n`;
   if (report.empty) return `${head}\n${report.empty}\n`;
   const body = report.lines.map(([name, value]) => `- ${name}: ${value}`).join('\n');
-  return `${head}\n${body}\n\n이 보고서는 기록한 내용을 그대로 요약한 것이며, 의학적 판단이나 진단이 아닙니다.\n일기 원문은 포함하지 않습니다.\n`;
+  const events = document.getElementById('report-events').value.trim();
+  return `${head}\n${body}${events ? `\n\n주요 사건 (사용자 확인·수정)\n${events}` : ''}\n\n이 보고서는 기록과 사용자가 확인한 사건 요약을 담고 있으며, 의학적 판단이나 진단이 아닙니다.\n일기 원문 전체는 포함하지 않습니다.\n`;
 }
 
 document.addEventListener('click', (event) => {
@@ -848,6 +941,7 @@ document.getElementById('delete-records').addEventListener('click', () => {
   try {
     localStorage.removeItem('mindily-records');
     localStorage.removeItem(organizerKey);
+    [7, 30, 365].forEach(range => localStorage.removeItem(reportEventKey(range)));
     window.location.reload();
   } catch (_) { toast('이 브라우저의 기록을 삭제할 수 없어요. 저장 설정을 확인해주세요.'); }
 });
@@ -864,6 +958,7 @@ function toast(message) {
 renderChart();
 hydrateLatest();
 hydrateOrganizer();
+renderPersonalQuote();
 showScreen('home', false);
 
 /* ── 앱 설치(PWA) ──────────────────────────────────────────────

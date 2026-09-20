@@ -48,8 +48,9 @@ with patch('server.analyze', return_value=analyze(diary_text, 4)), \
         'text': diary_text, 'self_reported_stress': 4, 'context': 'diary'})
     assert response.status_code == 200, response.text
     body = response.json()
-    assert [step['tool'] for step in body['tool_trace']] == [
+    assert [step['tool'] for step in body['tool_trace'][:3]] == [
         'analyze_emotion', 'recommend_healing', 'retrieve_grounding']
+    assert body['tool_trace'][-1]['tool'] == 'generate_coach_message'
     assert body['grounding']['sources']
     assert client.post('/api/agent/coach', json={
         'text': diary_text, 'self_reported_stress': 6, 'context': 'diary'}).status_code == 422

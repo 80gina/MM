@@ -23,6 +23,7 @@ from memory_db import remember, recall, forget
 from coach_agent import run_coach_agent
 from rag import answer_with_grounding, retrieve_grounding
 from comfort_knowledge import comfort_for
+from diary_draft import organizer_draft, report_events
 import llm
 
 MODEL = os.getenv('MINDILY_MODEL_PATH', 'GGARA02/kcelectra-korean-emotion')
@@ -87,6 +88,22 @@ class Feedback(BaseModel):
     helpful: Optional[bool] = None
     satisfaction: Optional[int] = Field(default=None, ge=1, le=5, strict=True)
     comment: Optional[str] = Field(default=None, max_length=300)
+    consent: bool = False
+
+
+class OrganizerDraftRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=1000)
+    emotion: str = Field(default='', max_length=30)
+    consent: bool = False
+
+
+class ReportEventEntry(BaseModel):
+    date: str = Field(min_length=1, max_length=30)
+    text: str = Field(min_length=1, max_length=1000)
+
+
+class ReportEventsRequest(BaseModel):
+    entries: list[ReportEventEntry] = Field(min_length=1, max_length=10)
     consent: bool = False
 
 
@@ -170,6 +187,20 @@ def coach(request: AgentRequest):
     lead = analysis['labels'][0]['name'] if analysis else (request.known_emotion or '불안')
     result['comfort'] = comfort_for(lead)
     return result
+
+
+@app.post('/api/diary/organizer-draft')
+def create_organizer_draft(request: OrganizerDraftRequest):
+    if not request.consent:
+        raise HTTPException(422, '일기 내용으로 초안을 만드는 데 동의해 주세요.')
+    return organizer_draft(request.text.strip(), request.emotion.strip())
+
+
+@app.post('/api/report/events')
+def create_report_events(request: ReportEventsRequest):
+    if not request.consent:
+        raise HTTPException(422, '일기 내용으로 사건 요약을 만드는 데 동의해 주세요.')
+    return report_events([entry.model_dump() for entry in request.entries])
 
 
 @app.post('/api/memory')

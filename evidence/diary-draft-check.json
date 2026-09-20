@@ -1,0 +1,19 @@
+{
+  "checked_on": "2026-09-20",
+  "scope": "synthetic local requests only; not a real user test",
+  "organizer": {
+    "endpoint": "POST /api/diary/organizer-draft",
+    "consent_required": true,
+    "event_and_feeling_returned": true,
+    "local_generation": "extractive_fallback"
+  },
+  "report": {
+    "endpoint": "POST /api/report/events",
+    "consent_required": true,
+    "maximum_entries": 10,
+    "dated_event_summary_returned": true,
+    "local_generation": "extractive_fallback"
+  },
+  "tests": ["python test_diary_draft.py", "python test_agent.py", "python test_packaging.py", "node --check dist/app.js"],
+  "limits": ["External generation was mocked in tests, not called with a real diary", "User must review AI drafts before treating them as factual"]
+}

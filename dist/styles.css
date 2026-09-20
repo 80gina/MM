@@ -38,7 +38,11 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 .brand-mark { color: #438976; font-size: 32px; line-height: 1; transform: rotate(-10deg); }
 .brand-lockup strong, .mini-brand strong { display: block; font-family: "Gowun Dodum", sans-serif; font-size: 26px; letter-spacing: .02em; }
 .brand-lockup small, .mini-brand small { display: block; color: var(--muted); margin-top: 1px; font-size: 12px; }
-.desktop-rail blockquote { margin: 88px 0 24px; font-family: "Gowun Dodum", sans-serif; color: #675b57; font-size: 24px; line-height: 1.9; }
+.desktop-rail blockquote { margin: 88px 0 12px; font-family: "Gowun Dodum", sans-serif; color: #675b57; font-size: 24px; line-height: 1.9; white-space: pre-line; overflow-wrap: anywhere; }
+.quote-edit { align-self: flex-start; margin-bottom: 12px; }
+.personal-quote-card { margin: 12px 0; padding: 14px 18px; display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.personal-quote-card p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; color: #675b57; font-family: "Gowun Dodum", sans-serif; font-size: 13px; }
+.personal-quote-card button { flex: 0 0 auto; }
 .rail-art { height: 170px; position: relative; color: #7da887; font-size: 50px; border-bottom: 1px solid rgba(79, 116, 84, .18); }
 .rail-art span { position: absolute; }
 .rail-art span:nth-child(1) { left: 0; top: 42px; color: #c6d8ee; }
@@ -166,4 +170,11 @@ dialog { border: 0; padding: 0; color: var(--ink); }.sheet-dialog { width: min(4
 .report-bar small { flex: 0 0 22px; text-align: right; font-weight: 600; color: var(--muted); }
 .report-empty { margin: 0; font-size: 13px; color: var(--muted); }
 .report-card .model-note { display: block; margin-top: 14px; }
+.draft-controls { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; }
+.draft-controls h4, .draft-controls p { margin: 0; }
+.draft-controls h4 { font-size: 14px; }
+.draft-controls p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.draft-controls .privacy-inline { font-size: 12px; line-height: 1.55; }
+.draft-controls .journal-field textarea { min-height: 120px; }
+#report-draft-status { min-height: 1.4em; }
 .segmented button { min-width: 0; font-size: 13px; }.chart-point .chart-value { top: -24px; font-size: 11px; font-weight: 700; color: var(--muted); }

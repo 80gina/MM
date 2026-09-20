@@ -22,7 +22,7 @@ git clone "https://huggingface.co/spaces/${USER}/${SPACE}" "$TMP/space"
 
 echo "▶ 배포에 필요한 파일만 복사합니다."
 cp Dockerfile requirements.txt "$TMP/space/"
-cp server.py coach_agent.py rag.py llm.py \
+cp server.py coach_agent.py rag.py llm.py diary_draft.py \
    feedback_db.py healing_knowledge.py memory_db.py "$TMP/space/"
 rm -rf "$TMP/space/dist" && cp -r dist "$TMP/space/dist"
 

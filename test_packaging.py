@@ -1,12 +1,13 @@
 """Check Docker COPY covers every local module imported by the app."""
 import ast
+import re
 from pathlib import Path
 
 
 root = Path(__file__).resolve().parent
 dockerfile = (root / 'Dockerfile').read_text(encoding='utf-8')
 copied = set()
-for line in dockerfile.splitlines():
+for line in re.sub(r'\\\s*\n', ' ', dockerfile).splitlines():
     parts = line.split()
     if parts and parts[0] == 'COPY':
         copied.update(part for part in parts[1:-1] if part.endswith('.py'))
@@ -32,5 +33,5 @@ while pending:
                 assert local_file in copied, f'Dockerfile omits local module: {local_file}'
                 pending.append(local_file)
 
-assert (root / 'dist' / 'index.html').exists() and 'COPY dist ./dist' in dockerfile
+assert (root / 'dist' / 'index.html').exists() and 'dist ./dist' in dockerfile
 print('Docker source copy covers local server imports and UI: OK')

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=r20260921d">
+  <link rel="stylesheet" href="styles.css?v=r20260920draft1">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,7 +29,8 @@
         <span class="brand-mark" aria-hidden="true">♧</span>
         <div><strong>Mindily</strong><small>오늘도, 괜찮아요.</small></div>
       </div>
-      <blockquote>“조금 느려도 괜찮아요.<br>당신은 지금도 충분히 잘하고 있어요.”</blockquote>
+      <blockquote id="personal-quote">“조금 느려도 괜찮아요.<br>당신은 지금도 충분히 잘하고 있어요.”</blockquote>
+      <button class="text-button quote-edit" type="button" data-open-dialog="quote-dialog">이 문구 수정</button>
       <div class="rail-art" aria-hidden="true">
         <span>☁</span><span>❋</span><span>⌁</span>
       </div>
@@ -55,6 +56,8 @@
           <div class="quiet-window" aria-hidden="true"><span>☀</span><i></i><i></i><i></i></div>
           <button class="primary-button" type="button" data-go="diary"><span aria-hidden="true">＋</span> 오늘의 일기 쓰기</button>
         </div>
+
+        <div class="card personal-quote-card"><p id="home-personal-quote"></p><button class="text-button" type="button" data-open-dialog="quote-dialog">내 문구 수정</button></div>
 
         <div class="section-heading"><h3>오늘의 상태</h3><button type="button" class="text-button" data-go="records">기록 보기</button></div>
         <div class="card status-card">
@@ -200,7 +203,15 @@
         <section class="card report-card" id="emotion-report" aria-labelledby="report-heading">
           <div class="section-heading"><h3 id="report-heading">감정 분석 보고서</h3><button class="text-button" type="button" id="report-save">텍스트로 저장</button></div>
           <div id="report-body"></div>
-          <small class="model-note">기록한 내용을 그대로 요약한 것이며, 의학적 판단이나 진단이 아니에요.</small>
+          <div class="draft-controls">
+            <h4>주요 사건</h4>
+            <p>선택한 기간의 최근 일기 최대 10건을 바탕으로 초안을 만들어요. 생성 후 직접 고칠 수 있어요.</p>
+            <label class="privacy-inline"><input type="checkbox" id="report-draft-consent"> 초안 생성 시 일기 내용이 분석 서버로 전송되고, 생성형 AI가 연결된 경우 외부 AI에도 전송되는 데 동의해요.</label>
+            <button class="secondary-button" type="button" id="report-draft-button">주요 사건 초안 만들기</button>
+            <label class="journal-field" for="report-events"><span>수정 가능한 사건 요약</span><textarea id="report-events" maxlength="1200" placeholder="기록을 바탕으로 요약한 사건이 여기에 표시돼요."></textarea></label>
+            <p id="report-draft-status" role="status"></p>
+          </div>
+          <small class="model-note">스트레스·감정 수치는 기록에서 계산하고, 주요 사건 초안은 일기 내용에서 만듭니다. 원문 전체는 보고서 파일에 넣지 않아요. 의학적 판단이나 진단이 아니에요.</small>
         </section>
         <div class="card recent-entry"><div class="section-heading"><h3>최근 기록</h3><span id="record-date">오늘</span></div><div class="entry-title"><span id="record-emoji">😮‍💨</span><strong id="record-mood">걱정되는</strong><span class="soft-chip" id="record-stress">스트레스 3/5</span></div><p id="record-copy">오늘의 마음을 기록하면 여기에 일기와 AI가 정리한 감정이 남아요.</p></div>
         <button class="text-button" type="button" id="delete-records">이 브라우저의 모든 일기 기록 삭제</button>
@@ -239,13 +250,26 @@
     <form class="sheet-content" id="organize-form">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="section-heading"><div><span class="eyebrow">감정 정리하기</span><h2>지금 마음을 천천히 정리해요.</h2></div><button class="icon-button" type="button" data-close-dialog="organize-dialog" aria-label="닫기">×</button></div>
-      <p>정리한 내용은 이 브라우저에만 저장됩니다. 분석 서버로 보내지 않아요.</p>
+      <p>초안 만들기를 선택하면 최신 일기가 분석 서버로 전송돼요. 생성형 AI가 연결된 경우 외부 AI에도 전송됩니다. 수정한 정리 내용은 이 브라우저에만 저장돼요.</p>
+      <label class="privacy-inline"><input type="checkbox" id="organize-draft-consent"> 일기 내용으로 초안을 만드는 데 동의해요.</label>
+      <button class="secondary-button" type="button" id="organize-draft-button">일기로 초안 만들기</button>
       <label class="journal-field"><span>무슨 일이 있었나요?</span><textarea id="organize-event" maxlength="500" placeholder="기억나는 장면 한 가지만 적어도 좋아요."></textarea></label>
       <label class="journal-field"><span>어떤 마음이 들었나요?</span><textarea id="organize-feeling" maxlength="500" placeholder="정확한 단어를 몰라도 괜찮아요."></textarea></label>
       <label class="journal-field"><span>지금 무엇이 필요할까요?</span><textarea id="organize-need" maxlength="500" placeholder="쉼, 도움, 시간처럼 작은 것부터요."></textarea></label>
       <p id="organize-status" role="status">저장된 정리 내용이 없어요.</p>
       <button class="primary-button" type="submit">이 브라우저에 저장하기</button>
       <button class="text-button" type="button" id="delete-organized-thoughts">정리 내용 삭제</button>
+    </form>
+  </dialog>
+
+  <dialog id="quote-dialog" class="sheet-dialog">
+    <form class="sheet-content" id="quote-form">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="section-heading"><div><span class="eyebrow">나만의 문구</span><h2>화면의 글을 바꿔보세요.</h2></div><button class="icon-button" type="button" data-close-dialog="quote-dialog" aria-label="닫기">×</button></div>
+      <p>이 기기의 브라우저에만 저장돼요.</p>
+      <label class="journal-field" for="quote-input"><span>내가 보고 싶은 문구</span><textarea id="quote-input" maxlength="180" required></textarea></label>
+      <button class="primary-button" type="submit">문구 저장</button>
+      <button class="text-button" type="button" id="quote-reset">처음 문구로 되돌리기</button>
     </form>
   </dialog>
 
@@ -268,6 +292,6 @@
   </dialog>
 
   <div class="toast" role="status" aria-live="polite" id="toast"></div>
-  <script src="app.js?v=r20260921d"></script>
+  <script src="app.js?v=r20260920draft1"></script>
 </body>
 </html>

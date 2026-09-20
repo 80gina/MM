@@ -1,6 +1,7 @@
 @echo off
 setlocal
-cd /d "%~dp0_space_upload"
+set "ROOT=%~dp0"
+set "TMP=%TEMP%\mindily-hf-upload-%RANDOM%"
 
 echo ==========================================================
 echo   Hugging Face Space upload  -  yellowmug/mindily
@@ -19,25 +20,31 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist ".git" (
-  git init >nul
-  git symbolic-ref HEAD refs/heads/main
-  git remote add space https://huggingface.co/spaces/yellowmug/mindily
-)
-git remote set-url space https://huggingface.co/spaces/yellowmug/mindily
-
 echo [1/5] Fetching the current Space...
-git -c credential.helper= -c credential.interactive=never fetch space main
+git clone https://huggingface.co/spaces/yellowmug/mindily "%TMP%"
 if errorlevel 1 (
   echo [ERROR] Could not reach the Space. Check the network and try again.
   pause
   exit /b 1
 )
 
-echo [2/5] Comparing with local files...
-git reset --soft space/main
-git checkout space/main -- .gitattributes
+echo [2/5] Copying the current MM source files...
+copy /Y "%ROOT%Dockerfile" "%TMP%\Dockerfile" >nul
+copy /Y "%ROOT%requirements.txt" "%TMP%\requirements.txt" >nul
+copy /Y "%ROOT%server.py" "%TMP%\server.py" >nul
+copy /Y "%ROOT%coach_agent.py" "%TMP%\coach_agent.py" >nul
+copy /Y "%ROOT%rag.py" "%TMP%\rag.py" >nul
+copy /Y "%ROOT%llm.py" "%TMP%\llm.py" >nul
+copy /Y "%ROOT%diary_draft.py" "%TMP%\diary_draft.py" >nul
+copy /Y "%ROOT%feedback_db.py" "%TMP%\feedback_db.py" >nul
+copy /Y "%ROOT%healing_knowledge.py" "%TMP%\healing_knowledge.py" >nul
+copy /Y "%ROOT%memory_db.py" "%TMP%\memory_db.py" >nul
+copy /Y "%ROOT%SPACE_README.md" "%TMP%\README.md" >nul
+if exist "%TMP%\dist" rmdir /S /Q "%TMP%\dist"
+xcopy "%ROOT%dist" "%TMP%\dist" /E /I /Y >nul
 
+pushd "%TMP%"
+for /f "delims=" %%H in ('git rev-parse HEAD') do set "BASE_COMMIT=%%H"
 echo [3/5] Staging changes...
 git add -A
 git diff --cached --quiet
@@ -45,17 +52,15 @@ if errorlevel 1 (
   git diff --cached --name-status
   echo.
   echo [4/5] Committing...
-  git -c user.name="80gina" -c user.email="rkwktkeo20@gmail.com" commit -q -m "Sync app update: installable app, comfort content, healing tabs"
+  git -c user.name="80gina" -c user.email="rkwktkeo20@gmail.com" commit -q -m "Sync Mindily app update"
 ) else (
   echo [OK] Files already match the Space. Nothing new to commit.
 )
 
-git log space/main..HEAD --oneline >nul 2>&1
-git rev-list --count space/main..HEAD > "%TEMP%\hfahead.txt"
-set /p AHEAD=<"%TEMP%\hfahead.txt"
-del "%TEMP%\hfahead.txt" >nul 2>&1
-if "%AHEAD%"=="0" (
+for /f "delims=" %%H in ('git rev-parse HEAD') do set "NEW_COMMIT=%%H"
+if "%BASE_COMMIT%"=="%NEW_COMMIT%" (
   echo [DONE] The Space is already up to date.
+  popd
   pause
   exit /b 0
 )
@@ -71,9 +76,10 @@ if "%HFTOKEN%"=="" (
   exit /b 1
 )
 
-git -c credential.helper= -c credential.interactive=never push https://yellowmug:%HFTOKEN%@huggingface.co/spaces/yellowmug/mindily main
+git push https://yellowmug:%HFTOKEN%@huggingface.co/spaces/yellowmug/mindily main
 set "RC=%ERRORLEVEL%"
 set "HFTOKEN="
+popd
 
 if not "%RC%"=="0" (
   echo.

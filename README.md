@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| 🌐 **서비스 열기** | **https://yellowmug-mindily.hf.space** |
+| 🌐 **서비스 열기** | **https://yellowmug-mindily.hf.space** · [Space 관리](https://huggingface.co/spaces/yellowmug/mindily) |
 | 📄 **결과보고서** | [docs/결과보고서.md](docs/결과보고서.md) |
 | 📊 **발표자료** | [docs/presentation.pdf](docs/presentation.pdf) · [편집용 .pptx](docs/presentation.pptx) |
 | 🎬 **시연 영상** | [docs/mindily-demo-3min.mp4](docs/mindily-demo-3min.mp4) · 3분 01초 (대본: [시연영상대본](docs/시연영상대본.md)) |
@@ -139,9 +139,9 @@ generation: llm_grounded   ·  11.9초  ·  모델 gpt-5-mini (코디세이 제�
 
 | 이름 | 역할 | 담당 | 대표 커밋 |
 |---|---|---|---|
-| (김다빈) | 기획 / UX | 콘셉트, 모바일 UI, 접근성, 사용자 테스트 설계 |
-| (김진아) | 개발 | 모델 연동, FastAPI, Agent·RAG·생성형 AI·Memory, 배포 |
-| (이승민) | 검증 / 문서 | 기능명세, 테스트, 사용자 5명 피드백 수집·정리 |
+| **김다빈** | 기획 / UX | 콘셉트, 모바일 UI, 접근성, 사용자 테스트 설계 | [`7689aba`](https://github.com/80gina/MM/commit/7689aba) · [`f164d49`](https://github.com/80gina/MM/commit/f164d49) · [`1148bb4`](https://github.com/80gina/MM/commit/1148bb4) |
+| **김진아** | 개발 | 모델 연동, FastAPI, Agent·RAG·생성형 AI·Memory, 배포 | [`4c58d82`](https://github.com/80gina/MM/commit/4c58d82) · [`6ea3d1c`](https://github.com/80gina/MM/commit/6ea3d1c) · [`b77aea5`](https://github.com/80gina/MM/commit/b77aea5) |
+| **이승민** | 검증 / 문서 | 기능명세, 테스트, 사용자 5명 피드백 수집·정리 | [`e547f92`](https://github.com/80gina/MM/commit/e547f92) · [`557d1b0`](https://github.com/80gina/MM/commit/557d1b0) · [`30d6917`](https://github.com/80gina/MM/commit/30d6917) |
 
 ---
 

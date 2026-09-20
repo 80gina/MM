@@ -28,6 +28,9 @@ AutoModelForSequenceClassification.from_pretrained(m, revision=r, use_safetensor
 COPY --chown=user server.py coach_agent.py rag.py llm.py comfort_knowledge.py \
      feedback_db.py healing_knowledge.py memory_db.py ./
 COPY --chown=user index.html app.js styles.css ./dist/
+# PWA(홈 화면 설치)용 자원
+COPY --chown=user manifest.webmanifest sw.js ./dist/
+COPY --chown=user icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png ./dist/
 
 # SQLite 저장 경로. Space 재시작 시 초기화되므로 수집 즉시 집계를 내려받는다.
 ENV MINDILY_FEEDBACK_DB=/home/user/app/data/feedback.sqlite3 \

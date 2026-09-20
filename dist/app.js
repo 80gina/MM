@@ -582,3 +582,53 @@ renderChart();
 hydrateLatest();
 hydrateOrganizer();
 showScreen('home', false);
+
+/* ── 앱 설치(PWA) ──────────────────────────────────────────────
+   홈 화면에 추가하면 주소창 없이 앱처럼 열린다.
+   서비스 워커는 화면 자원만 캐시하고 /api/ 응답은 캐시하지 않는다. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+let installPrompt = null;
+const installBar = document.createElement('div');
+installBar.className = 'install-bar';
+installBar.hidden = true;
+installBar.innerHTML = '<span>홈 화면에 추가하면 앱처럼 열려요.</span>'
+  + '<button type="button" id="install-yes">설치</button>'
+  + '<button type="button" id="install-no" class="ghost" aria-label="설치 안내 닫기">닫기</button>';
+document.body.appendChild(installBar);
+
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  installPrompt = event;
+  try { if (localStorage.getItem('mindily-install-dismissed') === '1') return; } catch (_) {}
+  installBar.hidden = false;
+});
+
+installBar.addEventListener('click', async (event) => {
+  const target = event.target.closest('button');
+  if (!target) return;
+  if (target.id === 'install-no') {
+    installBar.hidden = true;
+    try { localStorage.setItem('mindily-install-dismissed', '1'); } catch (_) {}
+    return;
+  }
+  installBar.hidden = true;
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice.catch(() => {});
+  installPrompt = null;
+});
+
+window.addEventListener('appinstalled', () => {
+  installBar.hidden = true;
+  installPrompt = null;
+  toast('홈 화면에 추가했어요.');
+});
+
+/* 오프라인이면 분석이 안 된다는 사실을 미리 알린다. */
+window.addEventListener('offline', () => toast('인터넷이 끊겼어요. 일기는 쓸 수 있지만 감정 분석은 연결된 뒤에 가능해요.'));
+window.addEventListener('online', () => toast('다시 연결됐어요.'));

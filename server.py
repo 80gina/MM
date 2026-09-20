@@ -11,6 +11,10 @@ import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+import mimetypes
+
+# 일부 환경에서 .webmanifest MIME 타입이 없어 설치 배너가 뜨지 않는다.
+mimetypes.add_type('application/manifest+json', '.webmanifest')
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from feedback_db import save_feedback

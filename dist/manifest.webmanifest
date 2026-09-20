@@ -1,0 +1,19 @@
+{
+  "name": "Mindily — 오늘의 마음",
+  "short_name": "Mindily",
+  "description": "감정을 기록하고, 이해하고, 돌보는 AI 감정 일기",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eeeae4",
+  "theme_color": "#f8f5ef",
+  "categories": ["lifestyle", "health"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

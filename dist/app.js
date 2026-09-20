@@ -284,15 +284,22 @@ function renderHealing() {
       .filter(group => group.items.length)
       .sort((a, b) => b.items.some(i => i.id === card.id) - a.items.some(i => i.id === card.id));
 
-    const sections = groups.map(group => {
+    const sections = groups.map((group, index) => {
       const chips = group.items.map((item) => {
         const on = item.id === card.id;
         return `<button class="heal-tab${on ? ' active' : ''}" type="button" role="tab" aria-selected="${on}"
           data-heal="${escapeHtml(item.id)}"><span aria-hidden="true">${KIND_ICON[item.kind] || '✦'}</span>${escapeHtml(item.title)}<small>${item.minutes}분</small></button>`;
       }).join('');
-      return `<section class="heal-group">
-          <h4>${escapeHtml(group.name)}<span>${escapeHtml(group.hint)}</span></h4>
-          <div class="heal-tabs" role="tablist" aria-label="${escapeHtml(group.name)} 활동 고르기">${chips}</div>
+      const open = index === 0;   // 추천 1순위가 든 묶음만 펼쳐 두고 나머지는 접는다
+      const panelId = `heal-panel-${index}`;
+      return `<section class="heal-group${open ? ' open' : ''}">
+          <h4><button type="button" class="heal-toggle" data-heal-group="${index}"
+                aria-expanded="${open}" aria-controls="${panelId}">
+              <span class="heal-caret" aria-hidden="true">▸</span>
+              ${escapeHtml(group.name)}<span class="heal-hint">${escapeHtml(group.hint)}</span>
+              <span class="heal-count">${group.items.length}</span>
+            </button></h4>
+          <div class="heal-tabs" id="${panelId}" role="tablist" aria-label="${escapeHtml(group.name)} 활동 고르기">${chips}</div>
         </section>`;
     }).join('');
 
@@ -314,6 +321,14 @@ function renderHealing() {
 }
 
 document.addEventListener('click', (event) => {
+  const groupToggle = event.target.closest('[data-heal-group]');
+  if (groupToggle) {
+    const section = groupToggle.closest('.heal-group');
+    const open = !section.classList.contains('open');
+    section.classList.toggle('open', open);
+    groupToggle.setAttribute('aria-expanded', String(open));
+    return;
+  }
   const tab = event.target.closest('[data-heal]');
   if (tab) {
     selectedHealingId = tab.dataset.heal;

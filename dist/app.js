@@ -239,16 +239,9 @@ async function loadHealingRecommendations() {
   }
 }
 
-// 활동을 탭으로 고르고, 고른 하나만 자세히 본다. 링크로 나가지 않고 앱 안에서 끝낸다.
-function renderHealing() {
-  const host = document.getElementById('healing-host');
-  if (!host || !healingCards.length) return;
-  const tabs = healingCards.map((card) => {
-    const on = card.id === selectedHealingId;
-    return `<button class="heal-tab${on ? ' active' : ''}" type="button" role="tab" aria-selected="${on}"
-      data-heal="${escapeHtml(card.id)}"><span aria-hidden="true">${KIND_ICON[card.kind] || '✦'}</span>${escapeHtml(card.title)}</button>`;
-  }).join('');
-  const card = healingCards.find(item => item.id === selectedHealingId) || healingCards[0];
+// 활동 목록은 한 화면에 전부 펼쳐 두고, 고른 하나만 아래에서 자세히 본다.
+// 고를 때마다 전체를 다시 그리면 화면이 위로 튀므로, 상세 영역만 갈아끼운다.
+function healingDetailHtml(card) {
   const steps = (card.steps || []).map(step => `<li>${escapeHtml(step)}</li>`).join('');
   let action = '';
   if (card.id === 'breathing-1m') {
@@ -257,24 +250,55 @@ function renderHealing() {
     const playing = currentSound && currentSound.kind === card.sound;
     action = `<button class="secondary-button${playing ? ' playing' : ''}" type="button" data-sound="${escapeHtml(card.sound)}">${playing ? '■ 정지' : '▶ 소리 재생'}</button>`;
   }
-  host.innerHTML =
-    `<div class="heal-tabs" role="tablist" aria-label="추천 활동 고르기">${tabs}</div>` +
-    `<article class="card heal-detail" role="tabpanel">
-       <div class="heal-head"><span class="soft-chip">${escapeHtml(card.kind)}</span>
-         <span class="heal-min">약 ${card.minutes}분</span></div>
-       <h3>${escapeHtml(card.title)}</h3>
-       <p class="heal-desc">${escapeHtml(card.description)}</p>
-       ${steps ? `<ol class="heal-steps">${steps}</ol>` : ''}
-       ${action}
-       <small class="model-note">출처 · ${card.source_url && card.source_url.startsWith('https://')
-         ? `<a href="${escapeHtml(card.source_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.source_title)} ↗</a>`
-         : escapeHtml(card.source_title)}</small>
-     </article>`;
+  return `<div class="heal-head"><span class="soft-chip">${escapeHtml(card.kind)}</span>
+       <span class="heal-min">약 ${card.minutes}분</span></div>
+     <h3>${escapeHtml(card.title)}</h3>
+     <p class="heal-desc">${escapeHtml(card.description)}</p>
+     ${steps ? `<ol class="heal-steps">${steps}</ol>` : ''}
+     ${action}
+     <small class="model-note">출처 · ${card.source_url && card.source_url.startsWith('https://')
+       ? `<a href="${escapeHtml(card.source_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.source_title)} ↗</a>`
+       : escapeHtml(card.source_title)}</small>`;
+}
+
+function renderHealing() {
+  const host = document.getElementById('healing-host');
+  if (!host || !healingCards.length) return;
+  const card = healingCards.find(item => item.id === selectedHealingId) || healingCards[0];
+
+  let list = host.querySelector('.heal-tabs');
+  let detail = host.querySelector('.heal-detail');
+
+  if (!list || !detail) {
+    const tabs = healingCards.map((item) => {
+      const on = item.id === card.id;
+      return `<button class="heal-tab${on ? ' active' : ''}" type="button" role="tab" aria-selected="${on}"
+        data-heal="${escapeHtml(item.id)}"><span aria-hidden="true">${KIND_ICON[item.kind] || '✦'}</span>${escapeHtml(item.title)}<small>${item.minutes}분</small></button>`;
+    }).join('');
+    host.innerHTML =
+      `<p class="heal-guide">활동을 하나 고르면 아래에 방법이 나와요.</p>` +
+      `<div class="heal-tabs" role="tablist" aria-label="추천 활동 고르기">${tabs}</div>` +
+      `<article class="card heal-detail" role="tabpanel" aria-live="polite"></article>`;
+    list = host.querySelector('.heal-tabs');
+    detail = host.querySelector('.heal-detail');
+  } else {
+    // 목록은 그대로 두고 선택 표시만 바꾼다 (화면 위치가 흔들리지 않게)
+    list.querySelectorAll('[data-heal]').forEach((button) => {
+      const on = button.dataset.heal === card.id;
+      button.classList.toggle('active', on);
+      button.setAttribute('aria-selected', String(on));
+    });
+  }
+  detail.innerHTML = healingDetailHtml(card);
 }
 
 document.addEventListener('click', (event) => {
   const tab = event.target.closest('[data-heal]');
-  if (tab) { selectedHealingId = tab.dataset.heal; renderHealing(); return; }
+  if (tab) {
+    selectedHealingId = tab.dataset.heal;
+    renderHealing();
+    return;
+  }
   const soundButton = event.target.closest('[data-sound]');
   if (soundButton) { toggleNatureSound(soundButton.dataset.sound); }
 });

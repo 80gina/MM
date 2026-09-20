@@ -204,4 +204,18 @@ def save_user_feedback(feedback: Feedback):
             'receipt': receipt, 'message': '의견을 저장했어요.'}
 
 
+@app.middleware('http')
+async def no_cache_for_shell(request, call_next):
+    """index.html과 sw.js는 항상 재검증시킨다.
+
+    배포 후에도 브라우저가 옛 화면을 보여주는 사고를 막기 위함이다.
+    해시나 버전 표식이 붙는 자원(app.js?v=…)은 그대로 캐시해도 안전하다.
+    """
+    response = await call_next(request)
+    path = request.url.path
+    if path in ('/', '/index.html', '/sw.js') or path.startswith('/api/'):
+        response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+    return response
+
+
 app.mount('/', StaticFiles(directory=ROOT / 'dist', html=True), name='ui')

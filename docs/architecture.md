@@ -8,8 +8,8 @@
 
 | 계층 | 구성 | 책임 |
 |---|---|---|
-| ① 사용자 | 모바일·데스크톱 브라우저 | 설치 없이 HTTPS URL로 접속 |
-| ② 프론트엔드 | `dist/index.html`, `app.js`, `styles.css`, localStorage | 화면 렌더링, API 호출, **일기 원문 기기 보관** |
+| ① 사용자 | 모바일·데스크톱 브라우저 | 설치 없이 HTTPS URL로 접속. 홈 화면에 추가하면 설치형 웹앱으로 실행 |
+| ② 프론트엔드 | `dist/index.html`, `app.js`, `styles.css`, `manifest.webmanifest`, `sw.js`, localStorage | 화면 렌더링, API 호출, **일기 원문 기기 보관**, 기록 그래프·보고서 계산, 자연의 소리 합성 |
 | ③ API | `server.py` (FastAPI + Uvicorn) | 요청 검증, 라우팅, 상태 공개 |
 | ④ Agent | `coach_agent.py` | 의도 판별 후 도구를 순서대로 호출 |
 | ⑤ 모델·지식·저장 | KcELECTRA, `llm.py`, `rag.py`, `healing_knowledge.py`, `memory_db.py`, `feedback_db.py` | 분류 추론, 출처 접지 생성, 동의 기반 저장 |
@@ -71,6 +71,9 @@ generate_coach_message ┼─ 호출 실패  → deterministic_fallback (call_fa
 | 생성 실패 시 **자동 폴백** | 오류 표시 | 외부 API 장애가 서비스 중단이 되지 않게. 경로는 항상 공개 |
 | 일기 원문 **브라우저 보관** | 서버 DB 저장 | 개인정보 최소 수집 |
 | 선호 기억 **30일 만료** | 무기한 보관 | 개인화와 보호를 동시에 증명 |
+| 기록 그래프·보고서를 **기기 안에서 계산** | 서버에서 집계 | 일기와 기록을 서버로 보내지 않는다는 원칙을 그대로 지킨다 |
+| 자연의 소리를 **브라우저에서 합성** | 음원 파일 동봉 | 저작권 문제와 이미지 용량 증가를 동시에 없앤다 (Web Audio API) |
+| **설치형 웹앱(PWA)** | 네이티브 앱 등록 | 등록비·심사 없이 홈 화면 설치. 화면 자원만 캐시하고 `/api/*`는 캐시하지 않는다 |
 | **Hugging Face Spaces** 배포 | Render 유료 플랜 | 무료 등급으로 영구 HTTPS URL, 모델을 이미지에 동봉해 콜드스타트 제거 |
 
 ---

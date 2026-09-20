@@ -1,5 +1,8 @@
 # Hugging Face Space 배포 가이드
 
+> **현재 상태 (2026-09-21): 배포 완료 · 상시 동작.** https://yellowmug-mindily.hf.space
+> 코드를 고친 뒤 다시 올릴 때는 저장소 루트의 `push_to_huggingface.cmd` 를 실행하면 됩니다.
+
 기존 Render 설정은 유료 플랜(1c-2g + 2GB 디스크)을 전제로 해 막혀 있었습니다. **무료 등급으로 영구 HTTPS URL을 얻을 수 있는 Hugging Face Spaces**로 전환했습니다.
 
 | 항목 | 값 |

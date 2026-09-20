@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| 🌐 **서비스 열기** | 임시 HTTPS 주소 (테스트 시 발급) · 상시 주소는 `yellowmug/mindily` 쿼터 해제 후 |
+| 🌐 **서비스 열기** | **https://yellowmug-mindily.hf.space** |
 | 📄 **결과보고서** | [docs/결과보고서.md](docs/결과보고서.md) |
 | 📊 **발표자료** | [docs/presentation.pdf](docs/presentation.pdf) · [편집용 .pptx](docs/presentation.pptx) |
 | 🎬 **시연 영상** | [docs/mindily-demo-3min.mp4](docs/mindily-demo-3min.mp4) · 3분 01초 (대본: [시연영상대본](docs/시연영상대본.md)) |
@@ -176,9 +176,15 @@ python -m uvicorn server:app --host 127.0.0.1 --port 8010
 ```
 
 ### Hugging Face Space 배포
-```bash
-./deploy_space.sh yellowmug
+
+Windows에서는 저장소 루트의 스크립트를 더블클릭합니다. 바뀐 파일만 올리고 필요 없어진 파일은 지웁니다.
+
 ```
+push_to_huggingface.cmd
+```
+
+로그인은 계정 비밀번호가 아니라 Hugging Face **쓰기(write) 토큰**을 씁니다.
+macOS·Linux에서는 `./deploy_space.sh yellowmug` 를 쓸 수 있습니다.
 Space Settings → *Variables and secrets* 에 `CODYSSEY_API_KEY`(Secret), `CODYSSEY_API_BASE`, `CODYSSEY_MODEL`을 등록합니다.
 자세한 절차는 [배포 가이드](docs/DEPLOY_HF.md)를 참고하세요.
 
@@ -222,6 +228,7 @@ curl https://yellowmug-mindily.hf.space/api/llm/status
 
 ### 검증 증거
 - [API](evidence/api-check.json) · [Agent](evidence/agent-check.json) · [RAG](evidence/rag-check.json) · [생성형 AI](evidence/llm-check.json)
+- [배포 환경 실측](evidence/deploy-check.json) — 상태·생성 경로·실제 응답 문장·도구 추적
 - [선호 기억 유지·만료](evidence/memory-retention-check.json) · [확장 추천 카드](evidence/extension-recommendations-check.json)
 - [학습 데이터 전수 통계](evidence/training-data-audit.json) · [파일럿 추가 학습](evidence/team-motion-training.json)
 
@@ -241,7 +248,7 @@ curl https://yellowmug-mindily.hf.space/api/llm/status
 - 무료 Space는 영구 디스크가 없어 재시작 시 피드백·선호 데이터가 초기화됩니다. 일기와 기록 그래프는 기기 안에 있어 영향받지 않습니다.
 - 기록이 기기별로 분리됩니다. 폰과 PC의 그래프는 서로 다릅니다.
 - 위치 기반 추천(러닝 코스·근처 장소)은 권한·지도 API 검토 후 2단계입니다.
-- 상시 호스팅은 Hugging Face 측 CPU 쿼터 오류로 대기 중입니다. 시연·사용자 테스트는 임시 HTTPS 경로로 수행했습니다.
+- 초기에 Hugging Face 측 CPU 쿼터 오류로 기동이 막혀, 그동안 임시 HTTPS 경로로 시연·테스트했습니다. 현재는 해제되어 위 주소가 상시 동작합니다.
 
 ## 출처
 

@@ -1,0 +1,51 @@
+{
+  "measured_at": "2026-09-21T09:00:00+09:00",
+  "method": "배포 서버에 브라우저에서 직접 요청. 합성 문장을 사용했고 실사용자 데이터가 아님.",
+  "service_url": "https://yellowmug-mindily.hf.space",
+  "space": "https://huggingface.co/spaces/yellowmug/mindily",
+  "health": {
+    "status": "ready",
+    "model": "GGARA02/kcelectra-korean-emotion",
+    "revision": "2eaf89d8d2cbfd902b93e5ec989db2ec103806fb"
+  },
+  "llm_status": {
+    "llm_enabled": true,
+    "provider": "codyssey (OpenAI-compatible)",
+    "model": "gpt-5-mini",
+    "mode": "llm_grounded",
+    "sends_diary_text": false,
+    "grounding_policy": "answer only from retrieved source cards",
+    "last_error": null
+  },
+  "coach_call": {
+    "input": {
+      "text": "내일 발표를 잘할 수 있을지 걱정돼요.",
+      "self_reported_stress": 3,
+      "context": "diary"
+    },
+    "elapsed_ms": 11924,
+    "analysis_top": {"name": "불안", "score": 0.9799616932868958},
+    "chunks": 1,
+    "response_type": "llm_grounded",
+    "generation": "llm_grounded",
+    "fallback_reason": null,
+    "message": "지금 조금 불안하게 느껴지실 수 있어요. 편안한 자세에서 무리하지 않고 천천히 숨을 들이쉬고 내쉬는 1분 호흡하기를 해보세요.",
+    "recommendation_top3": ["1분 호흡하기", "주변 감각 돌아보기", "빗소리 듣기"],
+    "tool_trace": [
+      "analyze_emotion:completed",
+      "recommend_healing:completed",
+      "retrieve_grounding:completed",
+      "generate_coach_message:completed"
+    ]
+  },
+  "static_assets": {
+    "manifest.webmanifest": 200,
+    "sw.js": 200,
+    "icon-192.png": 200
+  },
+  "notes": [
+    "분류 점수는 확률 비율이 아니라 6개 라벨 softmax의 최댓값이다.",
+    "생성 문장은 검색된 출처 카드에 있는 활동만 언급했고, 감정을 단정하지 않는 어미를 사용했다.",
+    "무료 Space는 48시간 미접속 시 절전하며, 재시작 시 서버의 만족도·선호 기억이 초기화된다."
+  ]
+}

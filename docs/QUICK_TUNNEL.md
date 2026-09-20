@@ -1,5 +1,8 @@
 # 무료 임시 HTTPS 테스트: Cloudflare Quick Tunnel
 
+> **예비 경로입니다.** 지금은 https://yellowmug-mindily.hf.space 가 상시 동작하므로 평소에는 이 문서가 필요 없습니다.
+> 학교·회사 네트워크가 Space 접속을 막거나 발표 현장에서 인터넷이 불안할 때만 씁니다.
+
 2026-09-19에 로컬 Mindily 서버(8010 포트)를 Quick Tunnel로 연결하여 HTTPS 첫 화면(200), `/api/health`(`ready`), 가상의 일기 문장을 이용한 `/api/emotions/analyze`(모델 `GGARA02/kcelectra-korean-emotion`, 최상위 `기쁨`)를 확인했습니다. 주소는 세션마다 바뀌고 이 결과만으로 실제 사용자 5명 테스트·상시 배포가 완료된 것은 아닙니다.
 
 ## 처음 한 번만 준비

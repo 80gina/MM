@@ -1,0 +1,60 @@
+{
+  "checks": [
+    {
+      "check": "status_no_key_leak",
+      "passed": true,
+      "detail": "{\"llm_enabled\": false, \"provider\": \"codyssey (OpenAI-compatible)\", \"endpoint\": null, \"model\": null, \"mode\": \"deterministic_fallback\", \"sends_diary_text\": false, \"grounding_policy\": \"answer only from retrieved source cards\", \"last_error\": null}"
+    },
+    {
+      "check": "prompt_excludes_diary_text",
+      "passed": true,
+      "detail": "프롬프트에 원문 미포함"
+    },
+    {
+      "check": "prompt_includes_sources",
+      "passed": true,
+      "detail": "출처 카드 포함"
+    },
+    {
+      "check": "fallback_generation_flag",
+      "passed": true,
+      "detail": "deterministic_fallback"
+    },
+    {
+      "check": "fallback_reason_disclosed",
+      "passed": true,
+      "detail": "not_configured"
+    },
+    {
+      "check": "fallback_keeps_sources",
+      "passed": true,
+      "detail": 3
+    },
+    {
+      "check": "safety_blocks_diagnosis",
+      "passed": true,
+      "detail": "blocked"
+    },
+    {
+      "check": "safety_allows_normal",
+      "passed": true,
+      "detail": "allowed"
+    },
+    {
+      "check": "live_generation",
+      "passed": null,
+      "detail": "CODYSSEY_API_KEY / CODYSSEY_API_BASE 미설정 — 건너뜀"
+    }
+  ],
+  "llm_enabled": false,
+  "status": {
+    "llm_enabled": false,
+    "provider": "codyssey (OpenAI-compatible)",
+    "endpoint": null,
+    "model": null,
+    "mode": "deterministic_fallback",
+    "sends_diary_text": false,
+    "grounding_policy": "answer only from retrieved source cards",
+    "last_error": null
+  }
+}

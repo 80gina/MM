@@ -209,14 +209,6 @@ function renderAnalysis() {
 let healingCards = [];
 let selectedHealingId = null;
 
-// 비슷한 활동끼리 묶어 보여준다. 종류가 8가지라 그대로 나열하면 고르기 어렵다.
-const GROUPS = [
-  {name: '숨 고르기', hint: '지금 이 자리에서', kinds: ['호흡', '감각활동']},
-  {name: '소리로 쉬기', hint: '귀로 쉬어가기', kinds: ['자연의 소리', '음악']},
-  {name: '손으로 하기', hint: '생각을 손끝으로', kinds: ['필사', '취미']},
-  {name: '몸을 움직이기', hint: '자리에서 일어나', kinds: ['걷기', '꽃·나무']},
-];
-
 const KIND_ICON = {
   '호흡': '🌱', '감각활동': '◌', '자연의 소리': '🎧', '걷기': '👣',
   '꽃·나무': '🌿', '필사': '✎', '음악': '♫', '취미': '✦'
@@ -274,40 +266,20 @@ function renderHealing() {
   if (!host || !healingCards.length) return;
   const card = healingCards.find(item => item.id === selectedHealingId) || healingCards[0];
 
-  let list = host.querySelector('.heal-group') ? host : null;
+  let list = host.querySelector('.heal-tabs');
   let detail = host.querySelector('.heal-detail');
 
   if (!list || !detail) {
-    // 추천 1순위가 들어 있는 묶음을 맨 앞에 둔다 (추천 순서를 버리지 않기 위해)
-    const groups = GROUPS
-      .map(group => ({...group, items: healingCards.filter(item => group.kinds.includes(item.kind))}))
-      .filter(group => group.items.length)
-      .sort((a, b) => b.items.some(i => i.id === card.id) - a.items.some(i => i.id === card.id));
-
-    const sections = groups.map((group, index) => {
-      const chips = group.items.map((item) => {
-        const on = item.id === card.id;
-        return `<button class="heal-tab${on ? ' active' : ''}" type="button" role="tab" aria-selected="${on}"
-          data-heal="${escapeHtml(item.id)}"><span aria-hidden="true">${KIND_ICON[item.kind] || '✦'}</span>${escapeHtml(item.title)}<small>${item.minutes}분</small></button>`;
-      }).join('');
-      const open = index === 0;   // 추천 1순위가 든 묶음만 펼쳐 두고 나머지는 접는다
-      const panelId = `heal-panel-${index}`;
-      return `<section class="heal-group${open ? ' open' : ''}">
-          <h4><button type="button" class="heal-toggle" data-heal-group="${index}"
-                aria-expanded="${open}" aria-controls="${panelId}">
-              <span class="heal-caret" aria-hidden="true">▸</span>
-              ${escapeHtml(group.name)}<span class="heal-hint">${escapeHtml(group.hint)}</span>
-              <span class="heal-count">${group.items.length}</span>
-            </button></h4>
-          <div class="heal-tabs" id="${panelId}" role="tablist" aria-label="${escapeHtml(group.name)} 활동 고르기">${chips}</div>
-        </section>`;
+    const tabs = healingCards.map((item) => {
+      const on = item.id === card.id;
+      return `<button class="heal-tab${on ? ' active' : ''}" type="button" role="tab" aria-selected="${on}"
+        data-heal="${escapeHtml(item.id)}"><span aria-hidden="true">${KIND_ICON[item.kind] || '✦'}</span>${escapeHtml(item.title)}<small>${item.minutes}분</small></button>`;
     }).join('');
-
     host.innerHTML =
       `<p class="heal-guide">활동을 하나 고르면 아래에 방법이 나와요.</p>` +
-      sections +
+      `<div class="heal-tabs" role="tablist" aria-label="추천 활동 고르기">${tabs}</div>` +
       `<article class="card heal-detail" role="tabpanel" aria-live="polite"></article>`;
-    list = host;
+    list = host.querySelector('.heal-tabs');
     detail = host.querySelector('.heal-detail');
   } else {
     // 목록은 그대로 두고 선택 표시만 바꾼다 (화면 위치가 흔들리지 않게)
@@ -321,14 +293,6 @@ function renderHealing() {
 }
 
 document.addEventListener('click', (event) => {
-  const groupToggle = event.target.closest('[data-heal-group]');
-  if (groupToggle) {
-    const section = groupToggle.closest('.heal-group');
-    const open = !section.classList.contains('open');
-    section.classList.toggle('open', open);
-    groupToggle.setAttribute('aria-expanded', String(open));
-    return;
-  }
   const tab = event.target.closest('[data-heal]');
   if (tab) {
     selectedHealingId = tab.dataset.heal;

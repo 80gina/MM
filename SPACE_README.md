@@ -38,7 +38,7 @@ short_description: 감정 일기를 읽고 출처 있는 회복 활동을 추천
 | `CODYSSEY_API_KEY` | **Secret** | 코디세이에서 발급받은 키. 없으면 규칙 기반 문장으로 자동 폴백 |
 | `CODYSSEY_API_BASE` | Variable | 코디세이 엔드포인트 (예: `https://api.codyssey.kr/v1`) |
 | `CODYSSEY_MODEL` | Variable | 코디세이에서 지정한 모델명 (예: `gpt-4o-mini`) |
-| `MINDILY_LLM_TIMEOUT` | Variable | 기본 `8` (초) |
+| `MINDILY_LLM_TIMEOUT` | Variable | 기본 `20` (초). 추론형 모델은 응답이 느릴 수 있음 |
 
 ## 상태 확인
 

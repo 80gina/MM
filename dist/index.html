@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=r20260921b">
+  <link rel="stylesheet" href="styles.css?v=r20260921d">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -189,7 +189,7 @@
 
       <section class="screen" data-screen="records" aria-labelledby="records-heading">
         <div class="screen-intro"><span class="eyebrow">나의 마음 기록</span><h2 id="records-heading">감정은 매일 달라도 괜찮아요.</h2><p>평가보다 흐름을 발견하는 데 집중해요.</p></div>
-        <div class="segmented" role="tablist" aria-label="기록 기간"><button type="button" role="tab" aria-selected="true" data-range="7">주간</button><button type="button" role="tab" aria-selected="false" data-range="30">월간</button></div>
+        <div class="segmented" role="tablist" aria-label="기록 기간"><button type="button" role="tab" aria-selected="true" data-range="7">주간</button><button type="button" role="tab" aria-selected="false" data-range="30">월간</button><button type="button" role="tab" aria-selected="false" data-range="365">연간</button></div>
         <div class="card chart-card">
           <div class="section-heading"><h3 id="chart-title">최근 7일 스트레스 흐름</h3><span class="soft-chip" id="chart-badge">내 기록</span></div>
           <div class="emotion-chart" id="emotion-chart" role="img" aria-label="최근 기록의 스트레스 흐름"></div>
@@ -197,6 +197,11 @@
           <div class="chart-axis" id="chart-axis"></div>
         </div>
         <div class="card pattern-card"><div class="pattern-icon" aria-hidden="true">◷</div><div><span class="eyebrow" id="pattern-title">기록 살펴보기</span><p id="pattern-copy">일기를 쓰면 여기에 흐름이 쌓여요.</p></div></div>
+        <section class="card report-card" id="emotion-report" aria-labelledby="report-heading">
+          <div class="section-heading"><h3 id="report-heading">감정 분석 보고서</h3><button class="text-button" type="button" id="report-save">텍스트로 저장</button></div>
+          <div id="report-body"></div>
+          <small class="model-note">기록한 내용을 그대로 요약한 것이며, 의학적 판단이나 진단이 아니에요.</small>
+        </section>
         <div class="card recent-entry"><div class="section-heading"><h3>최근 기록</h3><span id="record-date">오늘</span></div><div class="entry-title"><span id="record-emoji">😮‍💨</span><strong id="record-mood">걱정되는</strong><span class="soft-chip" id="record-stress">스트레스 3/5</span></div><p id="record-copy">오늘의 마음을 기록하면 여기에 일기와 AI가 정리한 감정이 남아요.</p></div>
         <button class="text-button" type="button" id="delete-records">이 브라우저의 모든 일기 기록 삭제</button>
       </section>
@@ -263,6 +268,6 @@
   </dialog>
 
   <div class="toast" role="status" aria-live="polite" id="toast"></div>
-  <script src="app.js?v=r20260921b"></script>
+  <script src="app.js?v=r20260921d"></script>
 </body>
 </html>

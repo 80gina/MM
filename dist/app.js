@@ -273,7 +273,7 @@ function renderHealing() {
     const tabs = healingCards.map((item) => {
       const on = item.id === card.id;
       return `<button class="heal-tab${on ? ' active' : ''}" type="button" role="tab" aria-selected="${on}"
-        data-heal="${escapeHtml(item.id)}"><span aria-hidden="true">${KIND_ICON[item.kind] || '✦'}</span>${escapeHtml(item.title)}<small>${item.minutes}분</small></button>`;
+        data-heal="${escapeHtml(item.id)}"><span aria-hidden="true">${KIND_ICON[item.kind] || '✦'}</span>${escapeHtml(item.title)}${item.title.includes(`${item.minutes}분`) ? '' : `<small>${item.minutes}분</small>`}</button>`;
     }).join('');
     host.innerHTML =
       `<p class="heal-guide">활동을 하나 고르면 아래에 방법이 나와요.</p>` +
@@ -463,7 +463,7 @@ function saveEntry(entry) {
     const existing = records.findIndex(x => x.id && x.id === entry.id);
     if (existing >= 0) records.splice(existing, 1);
     records.unshift(entry);
-    localStorage.setItem('mindily-records', JSON.stringify(records.slice(0, 30)));
+    localStorage.setItem('mindily-records', JSON.stringify(records.slice(0, 400)));
     return true;
   } catch (_) { toast('이 브라우저에서는 기록 저장이 안 돼요. 저장 설정을 확인해주세요.'); return false; }
 }
@@ -564,12 +564,6 @@ document.getElementById('chat-form').addEventListener('submit', async (event) =>
   finally { submit.disabled = false; }
 });
 
-document.querySelector('.segmented').addEventListener('click', (event) => {
-  const button = event.target.closest('[role="tab"]');
-  if (!button) return;
-  document.querySelectorAll('.segmented [role="tab"]').forEach((item) => item.setAttribute('aria-selected', String(item === button)));
-  toast(button.textContent === '월간' ? '월간 보기는 다음 스프린트에서 실제 데이터와 연결돼요.' : '주간 기록을 보고 있어요.');
-});
 
 // 마음 기록 그래프 — 이 브라우저에 저장된 실제 일기 기록으로 그린다.
 // 막대 높이는 사용자가 직접 기록한 스트레스(1~5), 막대 위 얼굴은 그날의 대표 감정이다.
@@ -619,6 +613,24 @@ function chartDays(records, days) {
   return out;
 }
 
+function chartMonths(records, months) {
+  const buckets = [];
+  for (let i = months - 1; i >= 0; i -= 1) {
+    const date = new Date();
+    date.setDate(1); date.setHours(0, 0, 0, 0);
+    date.setMonth(date.getMonth() - i);
+    buckets.push({date, key: `${date.getFullYear()}-${date.getMonth()}`, entries: []});
+  }
+  const index = new Map(buckets.map(bucket => [bucket.key, bucket]));
+  records.forEach((entry) => {
+    if (!entry || !entry.date) return;
+    const date = new Date(entry.date);
+    const bucket = index.get(`${date.getFullYear()}-${date.getMonth()}`);
+    if (bucket) bucket.entries.push(entry);
+  });
+  return buckets;
+}
+
 function renderChart() {
   const host = document.getElementById('emotion-chart');
   if (!host) return;
@@ -627,18 +639,39 @@ function renderChart() {
   const badge = document.getElementById('chart-badge');
   const readout = document.getElementById('chart-readout');
   const records = readRecords();
+  const weekday = ['일', '월', '화', '수', '목', '금', '토'];
+
+  if (chartRange === 365) {
+    // 연간은 하루씩 그리면 읽을 수 없어서 달 평균으로 묶는다.
+    const months = chartMonths(records, 12);
+    const kept = months.filter(month => month.entries.length);
+    if (title) title.textContent = '최근 12개월 스트레스 흐름';
+    if (badge) badge.textContent = kept.length ? `기록 ${kept.length}개월` : '기록 없음';
+    host.innerHTML = months.map((month) => {
+      if (!month.entries.length) return '<div class="chart-point empty" style="--h:6%"></div>';
+      const average = month.entries.reduce((sum, entry) => sum + (Number(entry.stress) || 0), 0) / month.entries.length;
+      return `<div class="chart-point" style="--h:${16 + (average / 5) * 72}%" title="${month.date.getMonth() + 1}월 기록 ${month.entries.length}일"><span class="chart-value" aria-hidden="true">${average.toFixed(1)}</span></div>`;
+    }).join('');
+    if (axis) axis.innerHTML = months.map((month, i) => `<span>${i === 0 || month.date.getMonth() === 0 || i === months.length - 1 ? `${month.date.getMonth() + 1}월` : ''}</span>`).join('');
+    if (readout) {
+      readout.textContent = kept.length
+        ? kept.map(month => `${month.date.getMonth() + 1}월 기록 ${month.entries.length}일`).join(', ')
+        : '아직 기록이 없어요.';
+    }
+    renderPattern(kept.flatMap(month => month.entries.map(entry => ({date: new Date(entry.date), entry}))));
+    renderReport();
+    return;
+  }
+
   const days = chartDays(records, chartRange);
   const filled = days.filter(day => day.entry);
-  const weekday = ['일', '월', '화', '수', '목', '금', '토'];
   const showFaces = chartRange <= 10;
 
   if (title) title.textContent = chartRange === 7 ? '최근 7일 스트레스 흐름' : '최근 30일 스트레스 흐름';
   if (badge) badge.textContent = filled.length ? `내 기록 ${filled.length}일` : '기록 없음';
 
   host.innerHTML = days.map((day) => {
-    if (!day.entry) {
-      return '<div class="chart-point empty" style="--h:6%"></div>';
-    }
+    if (!day.entry) return '<div class="chart-point empty" style="--h:6%"></div>';
     const stress = Number(day.entry.stress) || 1;
     const face = showFaces ? `<span aria-hidden="true">${faceFor(entryMood(day.entry))}</span>` : '';
     return `<div class="chart-point" style="--h:${16 + (stress / 5) * 72}%">${face}</div>`;
@@ -658,7 +691,109 @@ function renderChart() {
       : '아직 기록이 없어요.';
   }
   renderPattern(filled);
+  renderReport();
 }
+
+// 감정 분석 보고서 — 기간별 요약.
+// 기록에 있는 값만 계산해 적고, 원인·진단·조언은 만들지 않는다.
+const RANGE_LABEL = {7: '최근 7일', 30: '최근 30일', 365: '최근 12개월'};
+
+function rangeEntries() {
+  const records = readRecords();
+  const from = new Date();
+  from.setHours(0, 0, 0, 0);
+  if (chartRange === 365) { from.setMonth(from.getMonth() - 11); from.setDate(1); }
+  else from.setDate(from.getDate() - (chartRange - 1));
+  return records
+    .filter(entry => entry && entry.date && new Date(entry.date) >= from)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+function summarize(entries) {
+  const values = entries.map(entry => Number(entry.stress) || 0);
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const top = entries.reduce((best, entry) => (Number(entry.stress) > Number(best.stress) ? entry : best), entries[0]);
+  const low = entries.reduce((best, entry) => (Number(entry.stress) < Number(best.stress) ? entry : best), entries[0]);
+  const counted = {};
+  entries.forEach((entry) => {
+    const mood = entryMood(entry);
+    if (mood) counted[mood] = (counted[mood] || 0) + 1;
+  });
+  const moods = Object.entries(counted).sort((a, b) => b[1] - a[1]);
+  const half = Math.floor(entries.length / 2);
+  const mean = list => list.reduce((sum, entry) => sum + (Number(entry.stress) || 0), 0) / (list.length || 1);
+  return {average, top, low, moods, days: entries.length,
+          early: mean(entries.slice(0, half)), late: mean(entries.slice(half))};
+}
+
+function dateText(value) {
+  const date = new Date(value);
+  return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+}
+
+function reportLines() {
+  const entries = rangeEntries();
+  const label = RANGE_LABEL[chartRange] || '최근 기록';
+  if (!entries.length) return {label, lines: [], empty: '이 기간에는 기록이 없어요. 일기를 쓰면 여기에 요약이 만들어져요.'};
+  const info = summarize(entries);
+  const lines = [
+    ['기록', `${label} 동안 ${info.days}번 기록했어요.`],
+    ['평균 스트레스', `${info.average.toFixed(1)} / 5`],
+    ['가장 높았던 날', `${dateText(info.top.date)} · ${info.top.stress}/5`],
+    ['가장 낮았던 날', `${dateText(info.low.date)} · ${info.low.stress}/5`],
+  ];
+  if (info.moods.length) {
+    lines.push(['자주 기록한 감정',
+      info.moods.slice(0, 3).map(([mood, count]) => `${mood} ${count}번`).join(' · ')]);
+  }
+  if (info.days >= 4) {
+    const gap = info.late - info.early;
+    const word = Math.abs(gap) < 0.3 ? '비슷했어요'
+      : (gap < 0 ? `${Math.abs(gap).toFixed(1)}만큼 낮아졌어요` : `${gap.toFixed(1)}만큼 높아졌어요`);
+    lines.push(['기간 전반 대비 후반', `${word} (앞 ${info.early.toFixed(1)} → 뒤 ${info.late.toFixed(1)})`]);
+  }
+  return {label, lines, moods: info.moods, days: info.days};
+}
+
+function renderReport() {
+  const body = document.getElementById('report-body');
+  if (!body) return;
+  const report = reportLines();
+  if (report.empty) {
+    body.innerHTML = `<p class="report-empty">${report.empty}</p>`;
+    return;
+  }
+  const rows = report.lines.map(([name, value]) =>
+    `<div class="report-row"><dt>${escapeHtml(name)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('');
+  const most = report.moods && report.moods.length ? report.moods[0][1] : 1;
+  const bars = (report.moods || []).slice(0, 5).map(([mood, count]) =>
+    `<div class="report-bar"><span>${escapeHtml(mood)}</span>
+       <i style="--w:${Math.round((count / most) * 100)}%"></i><small>${count}</small></div>`).join('');
+  body.innerHTML = `<dl class="report-rows">${rows}</dl>${bars ? `<div class="report-bars">${bars}</div>` : ''}`;
+}
+
+function reportText() {
+  const report = reportLines();
+  const head = `Mindily 감정 분석 보고서 — ${report.label}\n만든 날짜: ${dateText(new Date())}\n`;
+  if (report.empty) return `${head}\n${report.empty}\n`;
+  const body = report.lines.map(([name, value]) => `- ${name}: ${value}`).join('\n');
+  return `${head}\n${body}\n\n이 보고서는 기록한 내용을 그대로 요약한 것이며, 의학적 판단이나 진단이 아닙니다.\n일기 원문은 포함하지 않습니다.\n`;
+}
+
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('#report-save')) return;
+  try {
+    const blob = new Blob([reportText()], {type: 'text/plain;charset=utf-8'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `mindily-보고서-${RANGE_LABEL[chartRange] || '기록'}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    toast('보고서를 내려받았어요.');
+  } catch (_) { toast('이 브라우저에서는 저장이 안 돼요.'); }
+});
 
 // 기록에서 읽어낸 사실만 적는다. 원인을 해석하거나 진단하지 않는다.
 function renderPattern(filled) {
